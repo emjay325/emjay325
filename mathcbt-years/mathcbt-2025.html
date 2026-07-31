@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Math CBT 2025</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "Solve for x: 2x + 5 = 15", options: ["5", "10", "15", "20"], answer: "5"},
+  {q: "What is √144?", options: ["10", "11", "12", "13"], answer: "12"},
+  {q: "Find the mean of 10, 20, and 30", options: ["10", "20", "30", "60"], answer: "20"},
+  {q: "A triangle with all sides equal is called", options: ["Isosceles", "Scalene", "Equilateral", "Right angled"], answer: "Equilateral"},
+  {q: "How many sides does a pentagon have?", options: ["4", "5", "6", "7"], answer: "5"},
+  {q: "What is 12.5% of 800 naira?", options: ["80 naira", "100 naira", "120 naira", "150 naira"], answer: "100 naira"},
+  {q: "Simplify: 3x + 2y - x + y", options: ["2x + 3y", "4x + 3y", "2x + y", "3x + 2y"], answer: "2x + 3y"},
+  {q: "Find the value of x if 5x - 10 = 2x + 20", options: ["5", "10", "15", "30"], answer: "10"},
+  {q: "Convert 0.000032 to standard form", options: ["3.2 × 10⁻⁴", "3.2 × 10⁻⁵", "32 × 10⁻⁶", "0.32 × 10⁻⁴"], answer: "3.2 × 10⁻⁵"},
+  {q: "What is √225?", options: ["13", "15", "25", "35"], answer: "15"},
+  {q: "Calculate simple interest on 5000 naira for 3 years at 4% p.a.", options: ["200 naira", "400 naira", "600 naira", "800 naira"], answer: "600 naira"},
+  {q: "Find the median of the set: 12, 15, 10, 18, 14", options: ["10", "12", "14", "15"], answer: "14"},
+  {q: "Solve for y: (y ÷ 5) + 3 = 7", options: ["10", "15", "20", "25"], answer: "20"},
+  {q: "A bag contains 4 red and 6 black pens. Probability of picking red is?", options: ["2/3", "2/5", "3/5", "1/4"], answer: "2/5"},
+  {q: "What is the sum of interior angles of a pentagon?", options: ["180°", "360°", "540°", "720°"], answer: "540°"},
+  {q: "Simplify: 27^(1/3)", options: ["3", "9", "81", "243"], answer: "3"},
+  {q: "If x = 3 and y = -2, find the value of 2x - 3y", options: ["0", "6", "12", "15"], answer: "12"},
+  {q: "Find the area of a circle with radius 14cm (π = 22/7)", options: ["154cm²", "308cm²", "616cm²", "44cm²"], answer: "616cm²"},
+  {q: "What is the LCM of 12, 18, and 24?", options: ["36", "48", "72", "96"], answer: "72"},
+  {q: "Express 3/8 as a percentage", options: ["30.5%", "37.5%", "40%", "42.5%"], answer: "37.5%"},
+  {q: "Factorize: x² - 16", options: ["(x - 4)(x - 4)", "(x + 4)(x + 4)", "(x + 4)(x - 4)", "(x + 8)(x - 2)"], answer: "(x + 4)(x - 4)"},
+  {q: "Volume of a cylinder with r=7cm, h=10cm (π = 22/7)", options: ["770cm³", "1540cm³", "2200cm³", "3080cm³"], answer: "1540cm³"},
+  {q: "What is the range of: 4, 10, 2, 18, 15, 20?", options: ["15", "16", "18", "20"], answer: "18"},
+  {q: "Solve for p: 3(p - 4) = 18", options: ["6", "8", "10", "12"], answer: "10"},
+  {q: "A car travels 150km in 2.5 hours. Speed in km/h is?", options: ["50", "60", "70", "75"], answer: "60"},
+  {q: "Convert 11011 (base 2) to base 10", options: ["23", "25", "27", "29"], answer: "27"},
+  {q: "If 40% of 50 students are boys, how many are girls?", options: ["20", "25", "30", "35"], answer: "30"},
+  {q: "What is the HCF of 48, 72, and 96?", options: ["12", "24", "48", "6"], answer: "24"},
+  {q: "Third angle of a triangle if others are 45° and 75°?", options: ["50°", "60°", "70°", "80°"], answer: "60°"},
+  {q: "Evaluate: (0.2 × 0.3) ÷ 0.06", options: ["0.1", "1", "10", "100"], answer: "1"},
+  {q: "Perimeter of a square is 32cm. Its area is?", options: ["32cm²", "64cm²", "128cm²", "256cm²"], answer: "64cm²"},
+  {q: "If y ∝ x, and y = 12 when x = 3, find y when x = 7", options: ["16", "21", "28", "35"], answer: "28"},
+  {q: "Simplify: 4a² × 3a⁵", options: ["12a⁷", "12a¹⁰", "7a⁷", "7a¹⁰"], answer: "12a⁷"},
+  {q: "Find the value of 10⁻²", options: ["0.1", "0.01", "0.001", "100"], answer: "0.01"},
+  {q: "How many sides has an octagon?", options: ["6", "7", "8", "10"], answer: "8"},
+  {q: "Solve: 3x + 2 < 11", options: ["x < 3", "x > 3", "x < 4", "x > 4"], answer: "x < 3"},
+  {q: "Total surface area of a cube with side 5cm?", options: ["25cm²", "125cm²", "150cm²", "250cm²"], answer: "150cm²"},
+  {q: "Gradient of line through (2, 3) and (4, 7)?", options: ["1", "2", "3", "4"], answer: "2"},
+  {q: "What is the value of Cos 60°?", options: ["0.5", "0.866", "1", "0.707"], answer: "0.5"},
+  {q: "P(rain) = 0.7. What is P(no rain)?", options: ["0.1", "0.3", "0.5", "0.7"], answer: "0.3"},
+  {q: "Find x if x² = 1.44", options: ["0.12", "1.2", "12", "120"], answer: "1.2"},
+  {q: "Simplify: (2/3) + (1/4)", options: ["3/7", "3/12", "11/12", "2/7"], answer: "11/12"},
+  {q: "Mode of the numbers: 2, 3, 3, 4, 5, 5, 5, 6?", options: ["3", "4", "5", "6"], answer: "5"},
+  {q: "If radius is doubled, area increases by how many times?", options: ["2", "3", "4", "8"], answer: "4"},
+  {q: "Rectangle has length 12cm, diagonal 13cm. Width is?", options: ["1cm", "5cm", "7cm", "10cm"], answer: "5cm"},
+  {q: "Express 0.04567 correct to 3 sig. figures", options: ["0.045", "0.0456", "0.0457", "0.046"], answer: "0.0457"},
+  {q: "Angle of a sector that is 1/4 of a circle?", options: ["45°", "90°", "120°", "180°"], answer: "90°"},
+  {q: "If logₓ 10 = 1, what is x?", options: ["1", "10", "100", "0"], answer: "10"},
+  {q: "Solve: 2x + y = 7 and x - y = 2. Find x", options: ["1", "2", "3", "4"], answer: "3"},
+  {q: "What is the product of 0.02 and 0.003?", options: ["0.006", "0.0006", "0.00006", "0.6"], answer: "0.00006"}
+];
+
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>

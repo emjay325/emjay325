@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Literature CBT 2024</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "A figure of speech in which a part is used to represent the whole is called ___.", options: ["Metonymy", "Synecdoche", "Oxymoron", "Personification"], answer: "Synecdoche"},
+  {q: "The substitution of the name of an attribute or adjunct for that of the thing meant is ___.", options: ["Metonymy", "Metaphor", "Simile", "Irony"], answer: "Metonymy"},
+  {q: "A narrative technique that records the multi layered thoughts and feelings of a character is ___.", options: ["Omniscient narration", "Stream of consciousness", "Flashback", "First person point of view"], answer: "Stream of consciousness"},
+  {q: "A poem that tells a story and is often meant to be sung is a ___.", options: ["Lyric", "Ballad", "Sonnet", "Ode"], answer: "Ballad"},
+  {q: "In drama, the words spoken by a character directly to the audience, unheard by others on stage, is an ___.", options: ["Aside", "Soliloquy", "Monologue", "Epilogue"], answer: "Aside"},
+  {q: "A literary work that pokes fun at another work or its style is a ___.", options: ["Satire", "Parody", "Comedy", "Farce"], answer: "Parody"},
+  {q: "A play characterized by broad humor, wild antics, and physical comedy is a ___.", options: ["Tragedy", "Farce", "Melodrama", "Tragi comedy"], answer: "Farce"},
+  {q: "The continuation of a sentence without a pause beyond the end of a line or stanza is ___.", options: ["Enjambment", "Caesura", "Alliteration", "Onomatopoeia"], answer: "Enjambment"},
+  {q: "Which figure of speech is used in the phrase 'The pen is mightier than the sword'?", options: ["Metaphor", "Metonymy", "Personification", "Hyperbole"], answer: "Metonymy"},
+  {q: "A character who undergoes a significant internal change during the course of a story is a ___.", options: ["Static character", "Dynamic character", "Flat character", "Stock character"], answer: "Dynamic character"},
+  {q: "The error of judgment or character flaw that leads to the downfall of a tragic hero is ___.", options: ["Catharsis", "Hubris", "Hamartia", "Anagnorisis"], answer: "Hamartia"},
+  {q: "A poem of nineteen lines with a highly structured repeat of lines is a ___.", options: ["Sonnet", "Villanelle", "Haiku", "Sestina"], answer: "Villanelle"},
+  {q: "The use of an understatement to emphasize a point, often using a double negative, is ___.", options: ["Litotes", "Hyperbole", "Irony", "Paradox"], answer: "Litotes"},
+  {q: "A recurring image, sound, action, or other figure that has a symbolic significance in a story is a ___.", options: ["Theme", "Motif", "Plot", "Setting"], answer: "Motif"},
+  {q: "A short story that uses animal characters to teach a moral lesson is a ___.", options: ["Myth", "Legend", "Fable", "Parable"], answer: "Fable"},
+  {q: "The release of built up emotional tension by the audience at the end of a tragedy is ___.", options: ["Hamartia", "Hubris", "Catharsis", "Climax"], answer: "Catharsis"},
+  {q: "Which figure of speech is seen in 'Parting is such sweet sorrow'?", options: ["Metaphor", "Oxymoron", "Personification", "Hyperbole"], answer: "Oxymoron"},
+  {q: "The dictionary definition of a word is its ___.", options: ["Connotation", "Denotation", "Syntax", "Diction"], answer: "Denotation"},
+  {q: "A type of novel that tells its story through a series of documents or letters is ___.", options: ["Picaresque", "Epistolary", "Gothic", "Allegorical"], answer: "Epistolary"},
+  {q: "A break or pause in the middle of a line of poetry is a ___.", options: ["Enjambment", "Caesura", "Foot", "Meter"], answer: "Caesura"},
+  {q: "The sequence of events in a literary work is the ___.", options: ["Plot", "Setting", "Theme", "Tone"], answer: "Plot"},
+  {q: "A character who represents a single personality trait and does not change is a ___.", options: ["Round character", "Flat character", "Dynamic character", "Protagonist"], answer: "Flat character"},
+  {q: "The narrator voice in a poem is referred to as the ___.", options: ["Author", "Persona", "Character", "Protagonist"], answer: "Persona"},
+  {q: "A comic imitation of a serious literary type that treats a high subject in a low way is ___.", options: ["Parody", "Burlesque", "Satire", "Irony"], answer: "Burlesque"},
+  {q: "The time of year, day, or weather in a story is part of the ___.", options: ["Plot", "Conflict", "Setting", "Exposition"], answer: "Setting"},
+  {q: "A reference to a statement, person, place, or event from literature, history, or mythology is an ___.", options: ["Alliteration", "Allusion", "Allegory", "Analogy"], answer: "Allusion"},
+  {q: "Which of the following describes the rhythmic structure of a verse?", options: ["Meter", "Stanza", "Rhyme", "Couplet"], answer: "Meter"},
+  {q: "A poem that praises a person, object, or event is an ___.", options: ["Elegy", "Ode", "Lyric", "Sonnet"], answer: "Ode"},
+  {q: "In literature, a symbol is something that ___.", options: ["Explains the plot", "Represents something beyond itself", "Describes the setting", "Ends the story"], answer: "Represents something beyond itself"},
+  {q: "When the audience knows something that the characters in a play do not, it is ___.", options: ["Verbal irony", "Situational irony", "Dramatic irony", "Sarcasm"], answer: "Dramatic irony"},
+  {q: "A long speech by one character in a play, directed to other characters, is a ___.", options: ["Soliloquy", "Monologue", "Aside", "Dialogue"], answer: "Monologue"},
+  {q: "Which figure of speech is used in 'The smiling sun looked down on us'?", options: ["Metaphor", "Simile", "Personification", "Oxymoron"], answer: "Personification"},
+  {q: "The resolution or final outcome of the plot in a comedy is the ___.", options: ["Climax", "Denouement", "Exposition", "Catastrophe"], answer: "Denouement"},
+  {q: "A poem with no fixed rhyme or regular meter is called ___.", options: ["Blank verse", "Free verse", "Rhyming verse", "Lyric"], answer: "Free verse"},
+  {q: "Which literary device uses words to convey the opposite of their literal meaning?", options: ["Irony", "Metaphor", "Simile", "Hyperbole"], answer: "Irony"},
+  {q: "The point of view where the narrator knows the thoughts and feelings of all characters is ___.", options: ["First person", "Third person limited", "Third person omniscient", "Second person"], answer: "Third person omniscient"},
+  {q: "A six line stanza in poetry is called a ___.", options: ["Quatrain", "Sestet", "Octave", "Tercet"], answer: "Sestet"},
+  {q: "A novel about the growth and education of a protagonist from youth to adulthood is a ___.", options: ["Picaresque novel", "Bildungsroman", "Gothic novel", "Historical novel"], answer: "Bildungsroman"},
+  {q: "Which figure of speech is an intentional exaggeration for effect?", options: ["Litotes", "Hyperbole", "Metaphor", "Synecdoche"], answer: "Hyperbole"},
+  {q: "The instructions in a play script that tell actors how to move or speak are ___.", options: ["Dialogue", "Stage directions", "Prologue", "Epilogue"], answer: "Stage directions"},
+  {q: "An eight line stanza is called an ___.", options: ["Octave", "Sestet", "Quatrain", "Couplet"], answer: "Octave"},
+  {q: "A character who opposes the main character in a story is the ___.", options: ["Protagonist", "Antagonist", "Foil", "Hero"], answer: "Antagonist"},
+  {q: "The use of words that imitate the sounds they describe is ___.", options: ["Alliteration", "Onomatopoeia", "Assonance", "Consonance"], answer: "Onomatopoeia"},
+  {q: "A type of comedy that depends on ridiculous situations and physical humor is ___.", options: ["High comedy", "Satire", "Farce", "Tragi comedy"], answer: "Farce"},
+  {q: "A short introductory section of a book or play is a ___.", options: ["Prologue", "Epilogue", "Appendix", "Index"], answer: "Prologue"},
+  {q: "Which of the following is a fixed 3 line poem with a 5 7 5 syllable structure?", options: ["Sonnet", "Haiku", "Limerick", "Ode"], answer: "Haiku"},
+  {q: "The moral or message of a parable is often conveyed through ___.", options: ["Complex scientific facts", "Simple stories about human life", "Long epic poems", "Riddles"], answer: "Simple stories about human life"},
+  {q: "In a tragedy, the moment of realization for the hero is called ___.", options: ["Climax", "Anagnorisis", "Peripeteia", "Catharsis"], answer: "Anagnorisis"},
+  {q: "A type of stanza consisting of two rhyming lines is a ___.", options: ["Tercet", "Quatrain", "Couplet", "Sestet"], answer: "Couplet"},
+  {q: "The use of historical events and characters in a fictional story is a ___.", options: ["Fantasy novel", "Historical novel", "Science fiction", "Detective novel"], answer: "Historical novel"}
+];
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>

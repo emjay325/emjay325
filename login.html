@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CBT 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
+        <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">Student Login</h2>
+        
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Email Address:</label>
+                <input type="email" id="loginEmail" placeholder="Enter your email" required
+                    class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Password:</label>
+                <input type="password" id="loginPass" placeholder="Enter password" required
+                    class="w-full mt-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-300">
+                Login
+            </button>
+        </form>
+
+        <p class="text-sm text-center text-gray-500 mt-4">
+            Don't have an account? <a href="signup.html" class="text-blue-600 font-bold hover:underline">Create Account</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            // 1. Get user list from browser memory
+            let users = JSON.parse(localStorage.getItem('cbt_users')) || [];
+
+            // 2. Check if details match anyone in the list
+            const validUser = users.find(u => u.email === email && u.password === pass);
+
+            if (validUser) {
+                // Save the name of the person logged in so the CBT knows who they are
+                localStorage.setItem('current_user', validUser.name);
+                
+                alert("Login Successful! Welcome, " + validUser.name);
+                window.location.href = "subjects.html"; 
+            } else {
+                alert("Invalid email or password. Please try again.");
+            }
+        });
+    </script>
+</body>
+</html>

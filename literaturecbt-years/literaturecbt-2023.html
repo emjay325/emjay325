@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Literature CBT 2023</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "A literary device where a word is used in a way that suggests two or more meanings is a ___.", options: ["Pun", "Paradox", "Irony", "Metaphor"], answer: "Pun"},
+  {q: "The comic misuse of a word by confusing it with a similar sounding one is known as ___.", options: ["Spoonerism", "Malapropism", "Euphemism", "Archaism"], answer: "Malapropism"},
+  {q: "A character who does not possess the traditional qualities of a hero is an ___.", options: ["Antagonist", "Anti hero", "Villain", "Protagonist"], answer: "Anti hero"},
+  {q: "The repetition of the same word or phrase at the beginning of successive lines is ___.", options: ["Anaphora", "Epistrophe", "Alliteration", "Assonance"], answer: "Anaphora"},
+  {q: "A narrative that begins in the middle of the action is said to start ___.", options: ["In medias res", "Ab initio", "Post mortem", "In toto"], answer: "In medias res"},
+  {q: "A character based on a common literary or social stereotype is a ___.", options: ["Dynamic character", "Stock character", "Round character", "Complex character"], answer: "Stock character"},
+  {q: "The use of vivid language to represent objects, actions, or ideas is ___.", options: ["Diction", "Imagery", "Syntax", "Style"], answer: "Imagery"},
+  {q: "A poem that laments the loss of rural life or peaceful country scenes is ___.", options: ["Epic", "Pastoral", "Ballad", "Sonnet"], answer: "Pastoral"},
+  {q: "The feeling of pity or sadness evoked by a work of literature is ___.", options: ["Logos", "Ethos", "Pathos", "Bathos"], answer: "Pathos"},
+  {q: "A sudden transition from the sublime or serious to the ridiculous is ___.", options: ["Pathos", "Bathos", "Irony", "Satire"], answer: "Bathos"},
+  {q: "The use of words with the same final consonant sounds but different vowel sounds is ___.", options: ["Alliteration", "Assonance", "Consonance", "Rhyme"], answer: "Consonance"},
+  {q: "An unexpected power or event saving a seemingly hopeless situation in a play is a ___.", options: ["Denouement", "Deus ex machina", "Climax", "Prologue"], answer: "Deus ex machina"},
+  {q: "A long narrative poem that tells the adventures of a larger than life hero is an ___.", options: ["Lyric", "Epic", "Ode", "Sonnet"], answer: "Epic"},
+  {q: "The unrhymed form of iambic pentameter is known as ___.", options: ["Free verse", "Blank verse", "Heroic couplet", "Terza rima"], answer: "Blank verse"},
+  {q: "The Greek term for the three rules of drama (time, place, and action) is the ___.", options: ["Dramatic unities", "Tragic triad", "Aristotelian unities", "Stage conventions"], answer: "Aristotelian unities"},
+  {q: "A poem of five lines with a specific AABBA rhyme scheme is a ___.", options: ["Haiku", "Limerick", "Sonnet", "Quatrain"], answer: "Limerick"},
+  {q: "An address to an object or an idea as if it were alive and present is an ___.", options: ["Apostrophe", "Allusion", "Analogy", "Allegory"], answer: "Apostrophe"},
+  {q: "A novel that depicts the adventures of a roguish hero of low social class is a ___.", options: ["Gothic novel", "Picaresque novel", "Historical novel", "Epistolary novel"], answer: "Picaresque novel"},
+  {q: "Which figure of speech is seen in the expression 'He is a citizen of no mean city'?", options: ["Hyperbole", "Litotes", "Irony", "Oxymoron"], answer: "Litotes"},
+  {q: "The pattern of stressed and unstressed syllables in a poem is its ___.", options: ["Rhyme", "Meter", "Stanza", "Couplet"], answer: "Meter"},
+  {q: "The introduction of the characters and the basic situation at the start of a story is the ___.", options: ["Climax", "Exposition", "Denouement", "Rising action"], answer: "Exposition"},
+  {q: "A type of irony where the opposite of what is expected happens is ___.", options: ["Verbal irony", "Situational irony", "Dramatic irony", "Sarcasm"], answer: "Situational irony"},
+  {q: "The repeating of sounds at the beginning of words in a line is ___.", options: ["Consonance", "Alliteration", "Assonance", "Onomatopoeia"], answer: "Alliteration"},
+  {q: "A speech made by a character after the main action of a play has ended is the ___.", options: ["Prologue", "Epilogue", "Monologue", "Soliloquy"], answer: "Epilogue"},
+  {q: "The term for measuring the meter in a line of poetry is ___.", options: ["Verse", "Scansion", "Prosody", "Rhyme"], answer: "Scansion"},
+  {q: "Which figure of speech is an indirect reference to a famous person or event?", options: ["Alliteration", "Allusion", "Allegory", "Analogy"], answer: "Allusion"},
+  {q: "A poem that has three stanzas and is usually written for a specific person or event is an ___.", options: ["Ode", "Sonnet", "Elegy", "Lyric"], answer: "Ode"},
+  {q: "The use of an object to represent a larger, more abstract idea is ___.", options: ["Metaphor", "Symbolism", "Irony", "Personification"], answer: "Symbolism"},
+  {q: "A story that has both a literal and a symbolic meaning is an ___.", options: ["Allusion", "Allegory", "Analogy", "Anecdote"], answer: "Allegory"},
+  {q: "The narrative point of view that uses pronouns like 'I' and 'me' is ___.", options: ["First person", "Second person", "Third person", "Omniscient"], answer: "First person"},
+  {q: "A figure of speech where two opposite ideas are joined to create an effect is an ___.", options: ["Oxymoron", "Antithesis", "Metaphor", "Simile"], answer: "Antithesis"},
+  {q: "The turning point in a story where the main character's fate changes is the ___.", options: ["Peripeteia", "Anagnorisis", "Hamartia", "Catharsis"], answer: "Peripeteia"},
+  {q: "A character who remains the same throughout the entire story is a ___.", options: ["Dynamic character", "Static character", "Round character", "Complex character"], answer: "Static character"},
+  {q: "A literary genre that uses exaggerated characters and improbable situations for comedy is ___.", options: ["Tragedy", "Farce", "Satire", "Epic"], answer: "Farce"},
+  {q: "A poetic line with five feet (ten syllables) is called a ___.", options: ["Tetrameter", "Pentameter", "Hexameter", "Trimeter"], answer: "Pentameter"},
+  {q: "The central character of a tragedy whose downfall is caused by a fatal flaw is the ___.", options: ["Tragic hero", "Antagonist", "Villain", "Foil"], answer: "Tragic hero"},
+  {q: "The atmosphere or emotional setting created by a writer is the ___.", options: ["Tone", "Mood", "Style", "Theme"], answer: "Mood"},
+  {q: "A short, witty statement that expresses a clever or satirical thought is an ___.", options: ["Epigram", "Epitaph", "Eulogy", "Epic"], answer: "Epigram"},
+  {q: "The sequence of events leading up to the climax of a story is the ___.", options: ["Exposition", "Rising action", "Falling action", "Resolution"], answer: "Rising action"},
+  {q: "Which figure of speech is used in 'The kettle is boiling'?", options: ["Metaphor", "Metonymy", "Synecdoche", "Personification"], answer: "Metonymy"},
+  {q: "A poem that consists of three unrhymed lines with 5, 7, and 5 syllables is a ___.", options: ["Sonnet", "Haiku", "Limerick", "Tanka"], answer: "Haiku"},
+  {q: "The choice of words and style of expression used by an author is ___.", options: ["Syntax", "Diction", "Tone", "Mood"], answer: "Diction"},
+  {q: "The point in a play where the hero realizes their mistake or true identity is ___.", options: ["Hamartia", "Anagnorisis", "Peripeteia", "Catharsis"], answer: "Anagnorisis"},
+  {q: "A poem written in memory of a deceased person that is often inscribed on a tombstone is an ___.", options: ["Elegy", "Epitaph", "Eulogy", "Epigram"], answer: "Epitaph"},
+  {q: "The repeating of vowel sounds in a line of poetry is ___.", options: ["Alliteration", "Assonance", "Consonance", "Onomatopoeia"], answer: "Assonance"},
+  {q: "A stanza of three lines is called a ___.", options: ["Couplet", "Tercet", "Quatrain", "Sestet"], answer: "Tercet"},
+  {q: "A humorous poem that makes fun of a specific person or work is a ___.", options: ["Satire", "Parody", "Tragedy", "Epic"], answer: "Parody"},
+  {q: "The resolution or wrapping up of the plot at the end of a story is the ___.", options: ["Climax", "Denouement", "Exposition", "Rising action"], answer: "Denouement"},
+  {q: "A type of play that combines elements of both tragedy and comedy is a ___.", options: ["Melodrama", "Tragi comedy", "Farce", "Satire"], answer: "Tragi comedy"},
+  {q: "Which figure of speech is an overstatement used to emphasize a point?", options: ["Litotes", "Hyperbole", "Metaphor", "Irony"], answer: "Hyperbole"}
+];
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>

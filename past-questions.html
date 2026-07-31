@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Past Questions - Ace</title>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo-box">
+            <div class="logo-a">A</div>
+            <div class="logo-ce">ce</div>
+        </div>
+        <h2 class="header-center">Practice Past Questions for 2026/2027</h2>
+        <div class="header-buttons">
+            <a href="login.html" class="btn">Login</a>
+            <a href="Creat-account.html" class="btn">Create Account</a>
+        </div>
+    </header>
+
+    <section class="quick-jump">
+        <a href="index.html" class="back-home">👈Back to Home</a>
+
+        <h1>📄 Past Questions</h1>
+        <p>Quick Jump: Pick Subject + Year</p>
+
+        <div class="jump-box">
+            <label for="subject">Select Subject:</label>
+<select id="subject">
+    <option value="">--Choose Subject--</option>
+    <option value="math">Mathematics</option>
+    <option value="english">English</option>
+    <option value="biology">Biology</option>
+    <option value="chemistry">Chemistry</option>
+    <option value="physics">Physics</option>
+    <option value="economics">Economics</option>
+    <option value="civic">Civic Education</option>
+    <option value="agric">Agriculture</option>
+    <option value="literature">Lit-In-English</option>
+</select>
+
+            <label for="year">Select Year:</label>
+            <select id="year">
+                <option value="">--Choose Year--</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+                <option value="2020">2020</option>
+                <option value="2019">2019</option>
+                <option value="2018">2018</option>
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+                <option value="2015">2015</option>
+                <option value="2014">2014</option>
+                <option value="2013">2013</option>
+                <option value="2012">2012</option>
+                <option value="2011">2011</option>
+                <option value="2010">2010</option>
+            </select>
+            <button onclick="goToQuestion()">Go to Questions 👉</button>
+        </div>
+
+        <p style="margin-top: 30px; color: white;">Or <a href="subjects.html" style="color: gold;">Browse by Subject</a></p>
+    </section>
+
+    <script>
+        function goToQuestion() {
+            let subject = document.getElementById("subject").value;
+            let year = document.getElementById("year").value;
+
+            if(subject == "" || year == "") {
+                alert("Please select both Subject and Year");
+                return;
+            }
+                let url = subject + "-years/" + subject + "-" + year + ".html";
+
+                window.location.href = url;
+            
+        }
+    </script>
+    
+    
+    
+</body>
+</html>

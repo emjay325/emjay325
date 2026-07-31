@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Math CBT 2023</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "Simplify: (3/4) of 20 + 5", options: ["15", "20", "25", "30"], answer: "20"},
+  {q: "Find the percentage error if a length of 2.0m is measured as 1.9m", options: ["5%", "10%", "15%", "20%"], answer: "5%"},
+  {q: "Convert 25 (base 10) to base 8", options: ["31", "33", "27", "41"], answer: "31"},
+  {q: "Express 0.000789 in standard form", options: ["7.89 × 10⁻³", "7.89 × 10⁻⁴", "7.89 × 10⁻⁵", "78.9 × 10⁻⁴"], answer: "7.89 × 10⁻⁴"},
+  {q: "If 3 : 5 = x : 20, find the value of x", options: ["10", "12", "15", "18"], answer: "12"},
+  {q: "Find the value of k if (k + 1)² = 16", options: ["3", "4", "5", "15"], answer: "3"},
+  {q: "Simplify: 5√2 + √50", options: ["10√2", "15√2", "7√2", "5√2"], answer: "10√2"},
+  {q: "Make 'h' the subject of the formula: V = 1/3 πr²h", options: ["h = V / 3πr²", "h = 3V / πr²", "h = Vπr² / 3", "h = 3Vπ / r²"], answer: "h = 3V / πr²"},
+  {q: "Find the roots of the equation: x² - 5x + 6 = 0", options: ["2, 3", "-2, -3", "1, 6", "-1, -6"], answer: "2, 3"},
+  {q: "Solve: 2(x - 3) > 4", options: ["x > 5", "x < 5", "x > 7", "x < 7"], answer: "x > 5"},
+  {q: "If log₁₀ x = -1, find x", options: ["0.1", "0.01", "1", "10"], answer: "0.1"},
+  {q: "Simplify: (x³ × x⁵) ÷ x⁴", options: ["x⁴", "x³", "x²", "x⁸"], answer: "x⁴"},
+  {q: "Find the sum of the first 5 terms of the A.P: 2, 4, 6...", options: ["20", "30", "40", "50"], answer: "30"},
+  {q: "In a regular hexagon, find the size of one exterior angle.", options: ["30°", "45°", "60°", "120°"], answer: "60°"},
+  {q: "Find the area of a circle whose diameter is 14cm (π = 22/7)", options: ["154cm²", "616cm²", "44cm²", "77cm²"], answer: "154cm²"},
+  {q: "Calculate the volume of a rectangular prism with l=5cm, w=3cm, h=2cm", options: ["10cm³", "15cm³", "30cm³", "60cm³"], answer: "30cm³"},
+  {q: "Find the gradient of the line joining (1, 2) and (3, 8)", options: ["2", "3", "4", "6"], answer: "3"},
+  {q: "If Sin θ = 0.5, find the value of θ (0° < θ < 90°)", options: ["30°", "45°", "60°", "90°"], answer: "30°"},
+  {q: "A bag contains 5 red balls and 3 white balls. Probability of picking white is?", options: ["3/8", "5/8", "1/3", "1/5"], answer: "3/8"},
+  {q: "Find the mean of 2x, 3x, and 7x", options: ["4x", "5x", "6x", "12x"], answer: "4x"},
+  {q: "Solve for m: 2^(m+1) = 8", options: ["1", "2", "3", "4"], answer: "2"},
+  {q: "Find the HCF of 24, 36, and 48", options: ["6", "12", "18", "24"], answer: "12"},
+  {q: "Evaluate: (0.5)² + (0.2)²", options: ["0.7", "0.29", "0.49", "0.09"], answer: "0.29"},
+  {q: "If a = 4 and b = -3, find the value of a² + b²", options: ["7", "25", "1", "49"], answer: "25"},
+  {q: "Find the common difference in the A.P: 7, 3, -1...", options: ["4", "3", "-4", "-3"], answer: "-4"},
+  {q: "A clock shows 3:00. What is the angle between the hands?", options: ["45°", "90°", "120°", "180°"], answer: "90°"},
+  {q: "Find the value of 1/x + 1/y if x=2 and y=3", options: ["2/5", "5/6", "1/5", "6/5"], answer: "5/6"},
+  {q: "Find the area of a right-angled triangle with base 8cm and hypotenuse 10cm", options: ["24cm²", "40cm²", "48cm²", "80cm²"], answer: "24cm²"},
+  {q: "If the ratio of angles in a triangle is 1:2:3, find the largest angle.", options: ["30°", "60°", "90°", "120°"], answer: "90°"},
+  {q: "Simplify: (a²b³) ÷ (ab²)", options: ["ab", "a²b", "ab²", "a/b"], answer: "ab"},
+  {q: "Find the distance between points (0,0) and (3,4)", options: ["5", "7", "12", "25"], answer: "5"},
+  {q: "Evaluate: 100¹/² + 8¹/³", options: ["12", "52", "10", "6"], answer: "12"},
+  {q: "If tan θ = 3/4, find sin θ", options: ["3/5", "4/5", "5/3", "5/4"], answer: "3/5"},
+  {q: "Find the perimeter of a sector with radius 7cm and angle 90° (π = 22/7)", options: ["11cm", "18cm", "25cm", "44cm"], answer: "25cm"},
+  {q: "Find the median of 5, 2, 8, 1, 9", options: ["2", "5", "8", "9"], answer: "5"},
+  {q: "Express 0.625 as a fraction in its simplest form", options: ["5/8", "3/4", "1/2", "5/6"], answer: "5/8"},
+  {q: "The price of a book increased from ₦80 to ₦100. Find the percentage increase.", options: ["20%", "25%", "30%", "40%"], answer: "25%"},
+  {q: "Simplify: log₁₀ 1000", options: ["1", "2", "3", "10"], answer: "3"},
+  {q: "Calculate the curved surface area of a cylinder with r=7cm, h=10cm (π = 22/7)", options: ["220cm²", "440cm²", "154cm²", "770cm²"], answer: "440cm²"},
+  {q: "Solve: 3x/4 = 9", options: ["6", "9", "12", "15"], answer: "12"},
+  {q: "Find the sum of interior angles of a nonagon (9-sided polygon)", options: ["1080°", "1260°", "1440°", "1620°"], answer: "1260°"},
+  {q: "What is the probability of rolling a prime number on a fair 6-sided die?", options: ["1/2", "1/3", "1/6", "2/3"], answer: "1/2"},
+  {q: "Simplify: √72", options: ["6√2", "2√6", "36√2", "2√36"], answer: "6√2"},
+  {q: "If 2x + y = 10 and y = 2, find x", options: ["2", "4", "6", "8"], answer: "4"},
+  {q: "Find the LCM of 15, 20, and 30", options: ["30", "45", "60", "90"], answer: "60"},
+  {q: "Evaluate: Cos 0° + Sin 90°", options: ["0", "1", "2", "undefined"], answer: "2"},
+  {q: "Change 0.04 to a fraction in lowest terms", options: ["1/4", "1/25", "1/40", "4/10"], answer: "1/25"},
+  {q: "Find the range of: 10, 10, 10, 10, 10", options: ["0", "1", "10", "50"], answer: "0"},
+  {q: "A car covers 20km in 15 minutes. Speed in km/h is?", options: ["40", "60", "80", "100"], answer: "80"},
+  {q: "If the sum of three consecutive integers is 33, find the middle integer.", options: ["10", "11", "12", "13"], answer: "11"}
+];
+
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>

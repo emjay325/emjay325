@@ -1,0 +1,341 @@
+body{
+    background: linear-gradient(darkcyan, white) ;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: 'poppins', sans-serif;
+    color: gold;
+    background-color: #00b3a4;
+    margin: 0;
+    padding-bottom: 70px;
+}
+.past-questions-page {
+    background-image: url('Wassce.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+body:has(h1:contains("Past Questions")){
+    background-image: url('Wassce.png');
+    background-size: cover;
+}
+h1{
+    color: bisque;
+}
+p{
+    font-family: sans-serif;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: darkcyan;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 40px;
+    z-index: 999;
+    box-shadow: 0 -2px 10px;
+}
+
+.footer a{
+    color: gold;
+    font-size: 28px;
+}
+.header {
+    background: darkcyan;
+    padding: 15px 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid gold;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.logo-box {
+    width: 55px;
+    height: 55px;
+    background: gold;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 3px 8px
+    rgba(0,0,0,0.2);
+}
+
+.logo-a {
+    color: darkcyan;
+    font-size: 30px;
+    font-weight: 900;
+}
+
+.logo-ce {
+    color: darkcyan;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: -5px;
+}
+
+.hero {
+    text-align: center;
+    padding: 80px 20px;
+    color: white;
+}
+
+.hero h1 {
+    font-size: 42px;
+    color: gold;
+    margin-bottom: 15px;
+ }
+
+ .hero p {
+    font-size: 18px;
+    max-width: 600px;
+    margin: 0 auto 30px;
+ }
+
+ .btn-big {
+    background: gold;
+    color: darkcyan;
+    padding: 16px 40px;
+    border-radius: 12 px;
+    text-decoration: none;
+    font-weight: 900;
+    font-size: 18px;
+ }
+
+ .stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 50px;
+ }
+ .statsb {font-size: 28px; color: gold; }
+
+ .header-center {
+    color: gold;
+    font-weight: 800;
+    font-size: 18px;
+    margin: 0;
+    text-align: center;
+ }
+
+ .header-buttons { 
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+ }
+
+ .btn {
+    background: white;
+    color: darkcyan;
+    padding: 8px 16px;
+    text-decoration: none;
+    font-weight: 700;
+ }
+ .btn:hover {
+    background: gold;
+ }
+
+ .year-page {
+    padding: 50px 20px;
+    text-align: center;
+ }
+
+ .year-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    max-width: 800px;
+    margin: 30px auto;
+ }
+
+ .year-btn:hover {
+    background: darkcyan;
+    color: white;
+    transform: scale(1.05);
+ }
+.back-btn {
+    display: inline-block;
+    margin-top: 30px;
+    color: darkcyan;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.subject-hub {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.subject-hub h1 {
+    color: darkcyan;
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.subject-hub p {
+    color: #555;
+    margin-bottom: 40px;
+}
+
+.subject-options {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+.subject-card {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 15px;
+    text-decoration: none;
+    color: darkcyan;
+    width: 300px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    border: 2px solid darkcyan;
+    transition: 0.3s;
+}
+.subject-card:hover {
+    background: gold;
+    color: darkcyan;
+    transform: translateY(-8px);
+    border-color: gold;
+}
+.subject-card h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.back-btn {
+    color: darkcyan;
+    text-decoration: none;
+    font-weight: 700;
+}
+.back-btn:hover {
+    text-decoration: underline;
+}
+
+.all-subjects {
+    padding: 60px 20px;
+    background: #f5f5f5;
+    min-height: 80vh;
+    text-align: center;
+}
+
+.all-subjects h1 {
+    color: darkcyan;
+    font-size: 36px;
+    font-family: sans-serif;
+    margin-bottom: 40px;
+}
+
+.subject-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.subject-btn {
+    background: white;
+    color: darkcyan;
+    padding: 30px 20px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 20px;
+    border: 3px solid darkcyan;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+    transition: all 0.3s ease;
+}
+
+.subject-btn:hover {
+    background: gold;
+    color: darkcyan;
+    border-color: gold;
+    transform: translateY(-8px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.back-home {
+    display: inline-block;
+    background: darkcyan;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    margin-bottom: 20px;
+    transition: 0,3s;
+}
+
+.back-home:hover {
+    background: gold;
+    color: darkcyan;
+    transform: translateX(-5px);
+}
+
+.quick-jump {
+    padding: 80px 20px;
+    min-height: 80vh;
+    text-align: center;
+    color: white;       
+}
+
+.quick-jump h1 {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.jump-box {
+    background: rgba(255,255,255,0.95);
+    padding: 40px;
+    border-radius: 16px;
+    max-width: 500px;
+    margin: 30px auto;
+    color: darkcyan;
+    text-align: left;
+}
+
+.jump-box select {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: 2px solid darkcyan;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.jump-box button {
+    width: 100%;
+    padding: 15px;
+    background: darkcyan;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 800;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: o.3s;
+}
+.jump-box button:hover {
+    background: gold;
+    color: darkcyan;
+}
+
+
+
+
