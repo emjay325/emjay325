@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chemistry CBT 2023</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "Which of the following halogens is a liquid at room temperature?", options: ["Fluorine", "Chlorine", "Bromine", "Iodine"], answer: "Bromine"},
+  {q: "The kinetic theory of gases explains that gas pressure is caused by ___.", options: ["Molecular collisions with walls", "Attractive forces between molecules", "The size of the molecules", "Thermal expansion"], answer: "Molecular collisions with walls"},
+  {q: "Calculate the percentage by mass of Nitrogen in (NH₄)₂SO₄. [N=14, H=1, S=32, O=16]", options: ["21.2%", "25.0%", "14.2%", "28.1%"], answer: "21.2%"},
+  {q: "Which of the following gases is the most dense at STP?", options: ["H₂", "He", "CH₄", "Cl₂"], answer: "Cl₂"},
+  {q: "The process of bitumen being used for road surfacing is a result of ___.", options: ["Fractional distillation of crude oil", "Cracking of petroleum", "Polymerization of ethene", "Saponification of fats"], answer: "Fractional distillation of crude oil"},
+  {q: "Which of the following compounds is a primary alkanol?", options: ["Ethan-1,2-diol", "Propan-2-ol", "Butan-1-ol", "2-methylpropan-2-ol"], answer: "Butan-1-ol"},
+  {q: "The shape of the Boron trifluoride (BF₃) molecule is ___.", options: ["Tetrahedral", "Trigonal Planar", "Linear", "Pyramidal"], answer: "Trigonal Planar"},
+  {q: "Which of the following ions produces a brick-red flame during a flame test?", options: ["Na⁺", "K⁺", "Ca²⁺", "Cu²⁺"], answer: "Ca²⁺"},
+  {q: "The major product of the dehydration of Ethanol by concentrated H₂SO₄ at 170°C is ___.", options: ["Ethane", "Ethene", "Ethyne", "Ethoxyethane"], answer: "Ethene"},
+  {q: "How many unpaired electrons are in the ground state of a Carbon atom?", options: ["1", "2", "3", "4"], answer: "2"},
+  {q: "Which of the following is a neutral oxide?", options: ["MgO", "Al₂O₃", "N₂O", "SO₂"], answer: "N₂O"},
+  {q: "The gas that gives a 'pop' sound when a lighted splint is applied is ___.", options: ["Oxygen", "Hydrogen", "Carbon (IV) oxide", "Nitrogen"], answer: "Hydrogen"},
+  {q: "The relationship between the volume and number of moles of a gas at constant temperature and pressure is known as ___.", options: ["Boyle's Law", "Charles' Law", "Avogadro's Law", "Gay-Lussac's Law"], answer: "Avogadro's Law"},
+  {q: "Which of the following is a thermosetting plastic?", options: ["Polypropene", "Polythene", "Bakelite", "PVC"], answer: "Bakelite"},
+  {q: "The major constituent of 'water gas' is a mixture of ___.", options: ["CO and H₂", "CO and N₂", "CO₂ and H₂", "CH₄ and H₂"], answer: "CO and H₂"},
+  {q: "Which of the following is the most suitable method for collecting Nitrogen (IV) oxide gas in the laboratory?", options: ["Upward delivery", "Downward delivery", "Over water", "Over mercury"], answer: "Downward delivery"},
+  {q: "The type of bond in an Ammonium ion (NH₄⁺) is ___.", options: ["Ionic", "Covalent", "Dative covalent", "Metallic"], answer: "Dative covalent"},
+  {q: "Which of the following substances is used as a lubricant in heavy machinery?", options: ["Diamond", "Graphite", "Benzene", "Paraffin oil"], answer: "Graphite"},
+  {q: "The oxidation state of Phosphorus in H₃PO₄ is ___.", options: ["+1", "+3", "+5", "-3"], answer: "+5"},
+  {q: "Which of the following is an intensive property?", options: ["Mass", "Volume", "Density", "Length"], answer: "Density"},
+  {q: "The boiling point of water is higher than that of H₂S because of ___.", options: ["Covalent bonding", "Ionic bonding", "Hydrogen bonding", "Van der Waals forces"], answer: "Hydrogen bonding"},
+  {q: "Which of the following indicators is colorless in an acidic medium?", options: ["Methyl orange", "Litmus", "Phenolphthalein", "Methyl red"], answer: "Phenolphthalein"},
+  {q: "The number of isomers possible for Butane (C₄H₁₀) is ___.", options: ["2", "3", "4", "5"], answer: "2"},
+  {q: "Which of the following metals is extracted from Bauxite?", options: ["Iron", "Tin", "Aluminium", "Copper"], answer: "Aluminium"},
+  {q: "The addition of a catalyst to a reversible reaction at equilibrium will ___.", options: ["Increase yield", "Decrease yield", "Increase the rate of both reactions", "Shift equilibrium to the right"], answer: "Increase the rate of both reactions"},
+  {q: "Which of the following is an alkaline gas?", options: ["HCl", "NH₃", "SO₂", "Cl₂"], answer: "NH₃"},
+  {q: "The reagent used for testing the presence of starch is ___.", options: ["Benedict solution", "Iodine solution", "Millon reagent", "Fehling solution"], answer: "Iodine solution"},
+  {q: "Which of the following types of radiation has the highest ionizing power?", options: ["Alpha", "Beta", "Gamma", "X-ray"], answer: "Alpha"},
+  {q: "The process of obtaining salt from brine by solar energy is an example of ___.", options: ["Sublimation", "Evaporation", "Crystallization", "Distillation"], answer: "Evaporation"},
+  {q: "Which of the following is an example of a coordinate covalent compound?", options: ["MgCl₂", "NH₃", "H₃O⁺", "CCl₄"], answer: "H₃O⁺"},
+  {q: "The compound formed when Alkanoic acid reacts with Alkanol is called a/an ___.", options: ["Ether", "Ester", "Ketone", "Aldehyde"], answer: "Ester"},
+  {q: "Which of the following pollutants causes 'acid rain'?", options: ["CO", "CH₄", "SO₂", "CFCs"], answer: "SO₂"},
+  {q: "The electronic configuration of a Neon atom is ___.", options: ["1s² 2s² 2p⁴", "1s² 2s² 2p⁶", "1s² 2s² 2p⁶ 3s²", "1s² 2s²"], answer: "1s² 2s² 2p⁶"},
+  {q: "Which of the following salts is insoluble in water?", options: ["Na₂SO₄", "KNO₃", "PbCl₂ (cold)", "(NH₄)₂CO₃"], answer: "PbCl₂ (cold)"},
+  {q: "The general formula for the Alkyne series is ___.", options: ["CₙH₂ₙ₊₂", "CₙH₂ₙ", "CₙH₂ₙ₋₂", "CₙH₂ₙ₊₁"], answer: "CₙH₂ₙ₋₂"},
+  {q: "Which of the following acts as the oxidizing agent in the reaction: H₂S + Cl₂ → 2HCl + S?", options: ["H₂S", "Cl₂", "HCl", "S"], answer: "Cl₂"},
+  {q: "The molarity of a solution containing 5.3g of Na₂CO₃ in 250cm³ is ___? [Na₂CO₃=106]", options: ["0.05 mol/dm³", "0.10 mol/dm³", "0.20 mol/dm³", "0.50 mol/dm³"], answer: "0.20 mol/dm³"},
+  {q: "Which of the following shows the Tyndall effect?", options: ["True solution", "Colloidal solution", "Suspension", "Saturated solution"], answer: "Colloidal solution"},
+  {q: "The raw materials for the Contact Process are ___.", options: ["N₂ and H₂", "S, air and water", "NaCl and CaCO₃", "NH₃ and O₂"], answer: "S, air and water"},
+  {q: "Which of the following is a double salt?", options: ["NaCl", "KAl(SO₄)₂.12H₂O", "NaHCO₃", "CuSO₄.5H₂O"], answer: "KAl(SO₄)₂.12H₂O"},
+  {q: "The standard electrode potential is measured using the ___.", options: ["Calomel electrode", "Standard Hydrogen electrode", "Glass electrode", "Platinum electrode"], answer: "Standard Hydrogen electrode"},
+  {q: "The major property of a soapless detergent that makes it better than soap in hard water is ___.", options: ["It is more soluble", "It does not form scum with Ca²⁺", "It is made from petroleum", "It is biodegradable"], answer: "It does not form scum with Ca²⁺"},
+  {q: "Which of the following is used in the vulcanization of rubber?", options: ["Carbon", "Sulphur", "Nitrogen", "Phosphorus"], answer: "Sulphur"},
+  {q: "The volume of 0.1 mol/dm³ NaOH required to neutralize 25cm³ of 0.1 mol/dm³ H₂SO₄ is ___.", options: ["12.5cm³", "25.0cm³", "50.0cm³", "75.0cm³"], answer: "50.0cm³"},
+  {q: "Which of the following is a property of an endothermic reaction?", options: ["The container feels hot", "ΔH is positive", "Energy is released", "Products have lower energy than reactants"], answer: "ΔH is positive"},
+  {q: "The enzyme that converts Glucose into Ethanol and Carbon (IV) oxide is ___.", options: ["Diastase", "Maltase", "Zymase", "Invertase"], answer: "Zymase"},
+  {q: "Which of the following elements is a metalloid?", options: ["Aluminium", "Silicon", "Carbon", "Phosphorus"], answer: "Silicon"},
+  {q: "The separation of pigments in ink is best done by ___.", options: ["Fractional distillation", "Chromatography", "Filtration", "Crystallization"], answer: "Chromatography"},
+  {q: "Which of the following is the empirical formula of Ethanoic acid (CH₃COOH)?", options: ["CH₂O", "C₂H₄O₂", "CHO", "C₂H₂O"], answer: "CH₂O"},
+  {q: "The law of constant composition was proposed by ___.", options: ["John Dalton", "Joseph Proust", "Antoine Lavoisier", "Gay-Lussac"], answer: "Joseph Proust"}
+];
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>

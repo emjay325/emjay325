@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Civic CBT 2024</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "The willingness to work for the good of others without expecting a reward is ___.", options: ["selfishness", "selflessness", "greed", "nepotism"], answer: "selflessness"},
+  {q: "The act of treating people fairly and impartially is known as ___.", options: ["justice", "wickedness", "favouritism", "tribalism"], answer: "justice"},
+  {q: "Which of the following is a major reason for the establishment of NAPTIP?", options: ["To promote tourism", "To combat human trafficking", "To build schools", "To arrest drug users"], answer: "To combat human trafficking"},
+  {q: "A person who is forced into prostitution or forced labour is a victim of ___.", options: ["cultism", "human trafficking", "civil apathy", "political thuggery"], answer: "human trafficking"},
+  {q: "Which of the following is a core value that can prevent corruption?", options: ["Dishonesty", "Discipline", "Avarice", "Laziness"], answer: "Discipline"},
+  {q: "The principle which ensures that no person is punished except for a breach of the law is ___.", options: ["Rule of Law", "Military Decree", "Prerogative of Mercy", "Judicial Activism"], answer: "Rule of Law"},
+  {q: "Human rights are 'inalienable' because they ___.", options: ["belong only to the rich", "cannot be taken away from an individual", "are given by the police", "are only for citizens"], answer: "cannot be taken away from an individual"},
+  {q: "Which of the following bodies was set up to protect human rights in Nigeria?", options: ["National Human Rights Commission", "Economic and Financial Crimes Commission", "Code of Conduct Bureau", "Nigerian Customs Service"], answer: "National Human Rights Commission"},
+  {q: "Stigmatization of people living with HIV and AIDS can lead to ___.", options: ["health recovery", "emotional depression", "national growth", "increased popularity"], answer: "emotional depression"},
+  {q: "The following are ways to prevent human trafficking EXCEPT ___.", options: ["poverty reduction", "public enlightenment", "encouraging child labour", "strict border control"], answer: "encouraging child labour"},
+  {q: "A situation where citizens show no interest in the political affairs of their country is ___.", options: ["political engagement", "political apathy", "political culture", "political socialization"], answer: "political apathy"},
+  {q: "Which of the following causes political apathy?", options: ["Good governance", "Failed government promises", "Transparency", "Regular elections"], answer: "Failed government promises"},
+  {q: "The process of acquiring citizenship by an alien who has lived in a country for a long time is ___.", options: ["registration", "naturalization", "birth", "descent"], answer: "naturalization"},
+  {q: "Civil society groups are important in a democracy because they ___.", options: ["make laws", "act as watchdogs over the government", "conduct elections", "arrest criminals"], answer: "act as watchdogs over the government"},
+  {q: "Which of the following is a way to discourage political apathy?", options: ["Election rigging", "Good leadership", "Police brutality", "Thuggery"], answer: "Good leadership"},
+  {q: "The administrative arm of the government responsible for implementing policies is the ___.", options: ["Judiciary", "Public Service", "Press", "Pressure Group"], answer: "Public Service"},
+  {q: "A major characteristic of the civil service is 'anonymity', which means ___.", options: ["they are above the law", "they should not be heard or seen in public politics", "they do not have names", "they are not paid"], answer: "they should not be heard or seen in public politics"},
+  {q: "Which of the following is a problem of the Nigerian public service?", options: ["Selflessness", "Bureaucracy", "Integrity", "Meritocracy"], answer: "Bureaucracy"},
+  {q: "The act of belonging to a secret group whose activities are kept from the public is ___.", options: ["cultism", "patriotism", "citizenship", "philanthropy"], answer: "cultism"},
+  {q: "The following are reasons why people join cults EXCEPT ___.", options: ["search for protection", "peer pressure", "academic excellence", "desire for power"], answer: "academic excellence"},
+  {q: "Which of the following is a way the government can eradicate cultism?", options: ["Funding cult groups", "Enacting strict laws", "Ignoring the students", "Closing all schools"], answer: "Enacting strict laws"},
+  {q: "National consciousness means ___.", options: ["loving only one's tribe", "strong sense of belonging to one's nation", "hating other countries", "sleeping during national anthem"], answer: "strong sense of belonging to one's nation"},
+  {q: "The following promote national unity EXCEPT ___.", options: ["National Youth Service Corps", "Unity Schools", "Inter-ethnic marriage", "Religious fanaticism"], answer: "Religious fanaticism"},
+  {q: "A law that is made by the local government is called a ___.", options: ["Decree", "Bye-law", "Statute", "Edict"], answer: "Bye-law"},
+  {q: "The process of verifying the number of people living in a country is a ___.", options: ["Manifesto", "Census", "Referendum", "Plebiscite"], answer: "Census"},
+  {q: "Which of the following is a symptom of drug abuse?", options: ["Physical fitness", "Sudden change in behavior", "Academic success", "Emotional stability"], answer: "Sudden change in behavior"},
+  {q: "The following are preventive measures against drug abuse EXCEPT ___.", options: ["parental monitoring", "drug education", "selling drugs to minors", "strict legislation"], answer: "selling drugs to minors"},
+  {q: "The right of a citizen to seek redress in court is an example of ___.", options: ["Civil right", "Economic right", "Religious right", "Natural right"], answer: "Civil right"},
+  {q: "Which of the following is a limitation to the exercise of human rights?", options: ["State of emergency", "Peaceful rally", "Education", "Watching news"], answer: "State of emergency"},
+  {q: "The following are categories of human rights EXCEPT ___.", options: ["Civic and Political rights", "Economic and Social rights", "Environmental rights", "Criminal rights"], answer: "Criminal rights"},
+  {q: "A person who is willing to give up his life for his country is a ___.", options: ["rebel", "patriot", "traitor", "coward"], answer: "patriot"},
+  {q: "A major consequence of human trafficking on the victim is ___.", options: ["wealth accumulation", "psychological trauma", "high social status", "political power"], answer: "psychological trauma"},
+  {q: "Orderliness in society can be achieved through ___.", options: ["nepotism", "discipline", "anarchy", "bribery"], answer: "discipline"},
+  {q: "The following are agencies that protect citizens EXCEPT ___.", options: ["Nigeria Police Force", "Civil Defence", "Secret Cults", "Military"], answer: "Secret Cults"},
+  {q: "The 'Independence of the Judiciary' means that ___.", options: ["judges can make their own laws", "the court is free from executive control", "judges do not need a salary", "the court is above the constitution"], answer: "the court is free from executive control"},
+  {q: "Democracy is based on the principle of 'popular sovereignty' which means power belongs to the ___.", options: ["Military", "President", "People", "Police"], answer: "People"},
+  {q: "The following are pillars of democracy EXCEPT ___.", options: ["Political parties", "Free press", "Dictatorship", "Constitution"], answer: "Dictatorship"},
+  {q: "Which of the following is a disadvantage of a multi-party system?", options: ["It provides choices", "It can lead to political instability", "It encourages debate", "It promotes representation"], answer: "It can lead to political instability"},
+  {q: "The document that outlines the goals and promises of a political party is a ___.", options: ["Constitution", "Manifesto", "Hansard", "Gazette"], answer: "Manifesto"},
+  {q: "The arm of government that carries out the daily administration of the country is the ___.", options: ["Legislature", "Judiciary", "Executive", "Senate"], answer: "Executive"},
+  {q: "A major way of resolving communal conflict is through ___.", options: ["violence", "mediation", "war", "hatred"], answer: "mediation"},
+  {q: "The following are types of citizenship EXCEPT ___.", options: ["by birth", "by honorary", "by registration", "by force"], answer: "by force"},
+  {q: "A good citizen must be 'law-abiding', which means they ___.", options: ["break the law secretly", "follow the rules of the state", "make their own laws", "fight the police"], answer: "follow the rules of the state"},
+  {q: "Inter-communal relationship is important because it promotes ___.", options: ["tribal wars", "peace and harmony", "discrimination", "economic hardship"], answer: "peace and harmony"},
+  {q: "The set of rules and regulations that guide the conduct of people in a society is ___.", options: ["Fashion", "Law", "Music", "Rumour"], answer: "Law"},
+  {q: "Which of the following is a preventive measure against HIV?", options: ["Sharing toothbrushes", "Screening blood before transfusion", "Using unsterilized needles", "Having multiple sexual partners"], answer: "Screening blood before transfusion"},
+  {q: "Bureaucracy in the civil service helps to ensure ___.", options: ["fast decision making", "uniformity and order", "corruption", "laziness"], answer: "uniformity and order"},
+  {q: "The following are rights of a citizen EXCEPT the right to ___.", options: ["education", "vote", "vandalize public property", "freedom of speech"], answer: "vandalize public property"},
+  {q: "Which of the following is an example of a representative democracy?", options: ["Traditional kingdom", "Military junta", "Parliamentary system", "Autocracy"], answer: "Parliamentary system"},
+  {q: "A person who is not a citizen of Nigeria can become one through ___.", options: ["naturalization", "fighting in a war", "stealing", "changing their name"], answer: "naturalization"}
+];
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>

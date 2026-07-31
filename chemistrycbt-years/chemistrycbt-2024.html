@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chemistry CBT 2024</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "Which of the following elements has the smallest atomic radius?", options: ["Sodium", "Magnesium", "Silicon", "Chlorine"], answer: "Chlorine"},
+  {q: "The rate of a chemical reaction can be increased by all the following EXCEPT ___.", options: ["Increasing temperature", "Increasing concentration", "Increasing particle size", "Adding a catalyst"], answer: "Increasing particle size"},
+  {q: "Calculate the empirical formula of a compound containing 40% Carbon, 6.7% Hydrogen, and 53.3% Oxygen. [C=12, H=1, O=16]", options: ["CHO", "CH₂O", "C₂H₂O", "CH₃O"], answer: "CH₂O"},
+  {q: "According to Charles' Law, the volume of a gas is directly proportional to its ___.", options: ["Pressure", "Density", "Absolute temperature", "Mass"], answer: "Absolute temperature"},
+  {q: "Which of the following is an example of an endothermic process?", options: ["Neutralization", "Combustion", "Photosynthesis", "Respiration"], answer: "Photosynthesis"},
+  {q: "In the reaction: 2SO₂ + O₂ ⇌ 2SO₃, an increase in pressure will shift the equilibrium to the ___.", options: ["Left", "Right", "Center", "No change"], answer: "Right"},
+  {q: "What is the volume occupied by 2 moles of an ideal gas at STP?", options: ["22.4 dm³", "44.8 dm³", "11.2 dm³", "5.6 dm³"], answer: "44.8 dm³"},
+  {q: "Which of the following alcohols is a secondary alkanol?", options: ["Methanol", "Ethanol", "Propan-2-ol", "2-methylpropan-2-ol"], answer: "Propan-2-ol"},
+  {q: "The product of the reaction between Ethanoic acid and Ethanol in the presence of H₂SO₄ is ___.", options: ["Ethane", "Ethyl ethanoate", "Ethanal", "Ethoxyethane"], answer: "Ethyl ethanoate"},
+  {q: "Which of the following ions will migrate to the cathode during electrolysis?", options: ["Cl⁻", "OH⁻", "Cu²⁺", "SO₄²⁻"], answer: "Cu²⁺"},
+  {q: "The movement of gas molecules from a region of higher concentration to lower concentration is ___.", options: ["Osmosis", "Diffusion", "Effusion", "Transpiration"], answer: "Diffusion"},
+  {q: "How many electrons are shared in a double covalent bond?", options: ["2", "4", "6", "8"], answer: "4"},
+  {q: "Which of the following salts will undergo hydrolysis in water?", options: ["NaCl", "KNO₃", "NH₄Cl", "Na₂SO₄"], answer: "NH₄Cl"},
+  {q: "The catalyst used in the hydrogenation of vegetable oils is ___.", options: ["Platinum", "Nickel", "Iron", "Copper"], answer: "Nickel"},
+  {q: "What is the concentration of a solution containing 4g of NaOH in 250cm³ of solution? [NaOH=40]", options: ["0.1 mol/dm³", "0.2 mol/dm³", "0.4 mol/dm³", "1.0 mol/dm³"], answer: "0.4 mol/dm³"},
+  {q: "Which of the following is an allotrope of Carbon that conducts electricity?", options: ["Diamond", "Graphite", "Coal", "Lampblack"], answer: "Graphite"},
+  {q: "The type of isomerism shown by But-1-ene and But-2-ene is ___.", options: ["Chain isomerism", "Functional isomerism", "Position isomerism", "Optical isomerism"], answer: "Position isomerism"},
+  {q: "The cracking of heavy petroleum fractions is done to produce ___.", options: ["Lubricating oils", "Bitumen", "Petrol (Gasoline)", "Paraffin wax"], answer: "Petrol (Gasoline)"},
+  {q: "Which of the following gases will turn lime water milky?", options: ["O₂", "H₂", "CO₂", "NO₂"], answer: "CO₂"},
+  {q: "The bond angle in a tetrahedral molecule like CH₄ is ___.", options: ["90°", "109.5°", "120°", "180°"], answer: "109.5°"},
+  {q: "Which of the following metals is the most reactive?", options: ["Copper", "Iron", "Potassium", "Silver"], answer: "Potassium"},
+  {q: "The process by which large molecules are broken down into smaller ones by heat is ___.", options: ["Polymerization", "Cracking", "Fermentation", "Saponification"], answer: "Cracking"},
+  {q: "Calculate the mass of 0.5 moles of CaCO₃. [Ca=40, C=12, O=16]", options: ["50g", "100g", "25g", "75g"], answer: "50g"},
+  {q: "Which of the following is a neutral salt?", options: ["Na₂CO₃", "FeCl₃", "K₂SO₄", "CH₃COONa"], answer: "K₂SO₄"},
+  {q: "The most electronegative element in the periodic table is ___.", options: ["Oxygen", "Chlorine", "Fluorine", "Nitrogen"], answer: "Fluorine"},
+  {q: "A reaction in which the enthalpy change (ΔH) is negative is ___.", options: ["Endothermic", "Exothermic", "Spontaneous", "Reversible"], answer: "Exothermic"},
+  {q: "Which of the following methods is used to remove permanent hardness of water?", options: ["Boiling", "Addition of slaked lime", "Addition of washing soda", "Filtration"], answer: "Addition of washing soda"},
+  {q: "The gas evolved when Zinc reacts with dilute H₂SO₄ is ___.", options: ["O₂", "SO₂", "H₂", "H₂S"], answer: "H₂"},
+  {q: "How many Faraday of electricity is required to deposit 1 mole of Cu from Cu²⁺ solution?", options: ["1F", "2F", "3F", "4F"], answer: "2F"},
+  {q: "Which of the following is a macromolecule?", options: ["Glucose", "Water", "Starch", "Ethanol"], answer: "Starch"},
+  {q: "The shape of an Ammonia (NH₃) molecule is ___.", options: ["Tetrahedral", "Trigonal pyramidal", "Linear", "Bent"], answer: "Trigonal pyramidal"},
+  {q: "Which of the following is a physical property of diamond?", options: ["It is soft", "It conducts electricity", "It has a high melting point", "It is black"], answer: "It has a high melting point"},
+  {q: "What is the pH of a 0.01 mol/dm³ HCl solution?", options: ["1", "2", "3", "4"], answer: "2"},
+  {q: "The IUPAC name for CH₃CH₂CH(CH₃)CH₃ is ___.", options: ["Pentane", "2-methylbutane", "3-methylbutane", "Isopentane"], answer: "2-methylbutane"},
+  {q: "Which of the following indicators turns red in acidic solution?", options: ["Phenolphthalein", "Methyl orange", "Litmus paper", "Bromothymol blue"], answer: "Litmus paper"},
+  {q: "The separation of a mixture of liquid oxygen and liquid nitrogen is based on ___.", options: ["Density", "Solubility", "Boiling points", "Volatility"], answer: "Boiling points"},
+  {q: "The oxidation state of Nitrogen in HNO₃ is ___.", options: ["+3", "+4", "+5", "-3"], answer: "+5"},
+  {q: "Which of the following substances is a deliquescent?", options: ["NaCl", "NaOH", "Na₂CO₃", "CuSO₄.5H₂O"], answer: "NaOH"},
+  {q: "The functional group in Alkanals is ___.", options: ["-OH", "-CHO", "-COOH", "-CO-"], answer: "-CHO"},
+  {q: "Which of the following is a greenhouse gas?", options: ["O₂", "N₂", "CH₄", "Ar"], answer: "CH₄"},
+  {q: "The most abundant element in the Earth's crust is ___.", options: ["Iron", "Oxygen", "Silicon", "Aluminium"], answer: "Oxygen"},
+  {q: "A decrease in temperature in an exothermic reaction equilibrium will ___.", options: ["Shift equilibrium left", "Shift equilibrium right", "Increase rate only", "Decrease yield"], answer: "Shift equilibrium right"},
+  {q: "Which of the following is used as an anesthetic?", options: ["CHCl₃", "CCl₄", "CH₄", "C₂H₆"], answer: "CHCl₃"},
+  {q: "The solubility of KNO₃ at 20°C is 32g per 100g of water. How much is needed for 50g of water?", options: ["16g", "32g", "64g", "8g"], answer: "16g"},
+  {q: "The monomer of Natural Rubber is ___.", options: ["Ethene", "Isoprene", "Styrene", "Butadiene"], answer: "Isoprene"},
+  {q: "Which of the following oxides is amphoteric?", options: ["Na₂O", "Al₂O₃", "SO₃", "CaO"], answer: "Al₂O₃"},
+  {q: "The empirical formula of Benzene (C₆H₆) is ___.", options: ["CH", "C₂H₂", "C₃H₃", "C₆H₆"], answer: "CH"},
+  {q: "Which of the following shows the correct order of increasing penetrating power?", options: ["α < β < γ", "γ < β < α", "β < α < γ", "α < γ < β"], answer: "α < β < γ"},
+  {q: "The molar volume of any gas at STP is ___.", options: ["2.24 dm³", "22.4 dm³", "224 dm³", "0.224 dm³"], answer: "22.4 dm³"},
+  {q: "Which of the following is a property of a base?", options: ["Sour taste", "Turns blue litmus red", "Soapy feel", "pH less than 7"], answer: "Soapy feel"}
+];
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>
