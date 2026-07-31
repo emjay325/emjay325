@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>English CBT 2023</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "The jury ___ still debating the final verdict.", options: ["is", "are", "was", "were"], answer: "is"},
+  {q: "You had better ___ the medicine if you want to get well.", options: ["took", "taken", "take", "taking"], answer: "take"},
+  {q: "I am not used to ___ such spicy food.", options: ["eat", "ate", "eaten", "eating"], answer: "eating"},
+  {q: "The students were asked to look ___ the difficult words in the dictionary.", options: ["at", "up", "on", "into"], answer: "up"},
+  {q: "If he ___ harder, he would have passed the examination.", options: ["studied", "had studied", "studies", "has studied"], answer: "had studied"},
+  {q: "He is fond ___ bragging about his father's wealth.", options: ["at", "with", "of", "about"], answer: "of"},
+  {q: "None of the chairs ___ comfortable enough for the guest.", options: ["is", "are", "were", "have been"], answer: "is"},
+  {q: "The news of his death ___ like wildfire in the village.", options: ["spread", "spreads", "spreading", "was spreaded"], answer: "spread"},
+  {q: "The man was charged with murder, but he was later ___ by the court.", options: ["convicted", "sentenced", "acquitted", "remanded"], answer: "acquitted"},
+  {q: "I haven't seen my brother ___ three years.", options: ["since", "for", "ago", "within"], answer: "for"},
+  {q: "The car broke ___ on our way to the wedding.", options: ["up", "off", "down", "in"], answer: "down"},
+  {q: "We look forward to ___ our parents next month.", options: ["see", "seen", "seeing", "be seeing"], answer: "seeing"},
+  {q: "Choose the word NEAREST IN MEANING: The teacher's explanation was very LUCID.", options: ["clear", "confusing", "long", "loud"], answer: "clear"},
+  {q: "Choose the word NEAREST IN MEANING: He felt LETHARGIC after the long journey.", options: ["excited", "tired", "happy", "hungry"], answer: "tired"},
+  {q: "Choose the word NEAREST IN MEANING: The diamond was found to be GENUINE.", options: ["fake", "authentic", "expensive", "shiny"], answer: "authentic"},
+  {q: "Choose the word NEAREST IN MEANING: She gave a PERfunctory glance at the report.", options: ["detailed", "quick and careless", "angry", "serious"], answer: "quick and careless"},
+  {q: "Choose the word NEAREST IN MEANING: The village is very REMOTE.", options: ["distant", "crowded", "modern", "noisy"], answer: "distant"},
+  {q: "Choose the word NEAREST IN MEANING: He has a GARRULOUS nature.", options: ["quiet", "talkative", "wicked", "generous"], answer: "talkative"},
+  {q: "Choose the word NEAREST IN MEANING: The outcome of the election is IMMINENT.", options: ["uncertain", "about to happen", "distant", "false"], answer: "about to happen"},
+  {q: "Choose the word NEAREST IN MEANING: The water was CONTAMINATED.", options: ["pure", "polluted", "frozen", "salty"], answer: "polluted"},
+  {q: "Choose the word OPPOSITE IN MEANING: The boy's behavior was very IMPUDENT.", options: ["polite", "rude", "brave", "clumsy"], answer: "polite"},
+  {q: "Choose the word OPPOSITE IN MEANING: The company is currently PROSPEROUS.", options: ["rich", "failing", "stable", "new"], answer: "failing"},
+  {q: "Choose the word OPPOSITE IN MEANING: Her explanation was VAGUE.", options: ["unclear", "precise", "long", "confusing"], answer: "precise"},
+  {q: "Choose the word OPPOSITE IN MEANING: The soldier was very COWARDLY.", options: ["fearful", "valiant", "weak", "lazy"], answer: "valiant"},
+  {q: "Choose the word OPPOSITE IN MEANING: The lecture was very TEDIOUS.", options: ["boring", "interesting", "long", "short"], answer: "interesting"},
+  {q: "Choose the word OPPOSITE IN MEANING: The old man is very RIGID in his ways.", options: ["strict", "flexible", "angry", "poor"], answer: "flexible"},
+  {q: "Choose the word OPPOSITE IN MEANING: The weather today is very TURBULENT.", options: ["stormy", "calm", "windy", "cold"], answer: "calm"},
+  {q: "Choose the word OPPOSITE IN MEANING: The suspect provided a GENUINE alibi.", options: ["true", "fictitious", "strong", "written"], answer: "fictitious"},
+  {q: "Choose the word OPPOSITE IN MEANING: The mountain is very STEEP.", options: ["high", "gentle", "rough", "pointed"], answer: "gentle"},
+  {q: "Choose the word OPPOSITE IN MEANING: The child was ABANDONED by his parents.", options: ["left", "cherished", "neglected", "found"], answer: "cherished"},
+  {q: "IDIOM: To 'call it a day' means to ___.", options: ["start a job", "stop working on something", "have a birthday", "be late"], answer: "stop working on something"},
+  {q: "IDIOM: 'A stone's throw' means ___.", options: ["a long distance", "a very short distance", "to be violent", "a difficult task"], answer: "a very short distance"},
+  {q: "IDIOM: To 'beat around the bush' means to ___.", options: ["clear the forest", "avoid the main point", "be hardworking", "hunt for animals"], answer: "avoid the main point"},
+  {q: "IDIOM: To 'break the ice' means to ___.", options: ["make a cold drink", "start a conversation in a tense situation", "damage something", "be angry"], answer: "start a conversation in a tense situation"},
+  {q: "IDIOM: 'At the eleventh hour' means ___.", options: ["at exactly 11:00", "too early", "at the very last minute", "during the night"], answer: "at the very last minute"},
+  {q: "IDIOM: To 'cost an arm and a leg' means to be ___.", options: ["very painful", "very expensive", "useless", "cheap"], answer: "very expensive"},
+  {q: "SENTENCE INTERPRETATION: The manager said he would look into the matter. This means he will ___.", options: ["ignore it", "investigate it", "forget it", "hide it"], answer: "investigate it"},
+  {q: "SENTENCE INTERPRETATION: He was told to keep his chin up. This means he should ___.", options: ["look at the sky", "stay cheerful despite difficulties", "be proud", "be quiet"], answer: "stay cheerful despite difficulties"},
+  {q: "SENTENCE INTERPRETATION: It is raining cats and dogs. This means it is ___.", options: ["raining very heavily", "animals are falling", "the weather is dry", "it is a light shower"], answer: "raining very heavily"},
+  {q: "SENTENCE INTERPRETATION: She has a heart of gold. This means she is ___.", options: ["very rich", "very kind and generous", "wearing jewelry", "suffering from a disease"], answer: "very kind and generous"},
+  {q: "Choose the correct spelling:", options: ["Lieutenant", "Lutenant", "Lieutenent", "Leftenant"], answer: "Lieutenant"},
+  {q: "Choose the correct spelling:", options: ["Commitment", "Comitment", "Committment", "Comittment"], answer: "Commitment"},
+  {q: "Choose the correct spelling:", options: ["Necessary", "Neccessary", "Nessesary", "Necesary"], answer: "Necessary"},
+  {q: "Choose the correct spelling:", options: ["Embarrass", "Embaras", "Embarass", "Embarras"], answer: "Embarrass"},
+  {q: "Choose the correct spelling:", options: ["Independence", "Independance", "Independense", "Independanse"], answer: "Independence"},
+  {q: "The boy is as bold as a lion. This is a/an ___.", options: ["metaphor", "simile", "irony", "personification"], answer: "simile"},
+  {q: "You are not supposed to be here, ___ you?", options: ["are", "aren't", "were", "weren't"], answer: "are"},
+  {q: "The girl ___ I saw yesterday is my cousin.", options: ["who", "whom", "which", "whose"], answer: "whom"},
+  {q: "He didn't arrive on time ___ the traffic jam.", options: ["because", "despite", "owing to", "so"], answer: "owing to"},
+  {q: "The meeting has been put ___ until next week.", options: ["on", "off", "away", "up"], answer: "off"}
+];
+
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>

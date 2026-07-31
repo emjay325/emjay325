@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Economics CBT 2025</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "Human wants are said to be insatiable because they are ___.", options: ["Limited", "Competitive", "Unlimited", "Complementary"], answer: "Unlimited"},
+  {q: "The table that shows the relationship between the price of a good and the quantity demanded is the ___.", options: ["Demand schedule", "Demand curve", "Scale of preference", "Budget line"], answer: "Demand schedule"},
+  {q: "A shift in the demand curve for cocoa caused by a change in the price of coffee is an example of ___.", options: ["Composite demand", "Derived demand", "Joint demand", "Competitive demand"], answer: "Competitive demand"},
+  {q: "If a 10 percent rise in price causes a 5 percent fall in quantity demanded, the price elasticity of demand is ___.", options: ["0.5", "2.0", "1.0", "5.0"], answer: "0.5"},
+  {q: "The cross elasticity of demand for complementary goods is always ___.", options: ["Positive", "Zero", "Negative", "Infinite"], answer: "Negative"},
+  {q: "Utility is maximized when the marginal utility of a good is ___.", options: ["Increasing", "At its maximum", "Zero", "Negative"], answer: "Zero"},
+  {q: "An increase in the supply of a product while demand remains constant will lead to a ___.", options: ["Rise in price", "Fall in price", "Constant price", "Higher tax"], answer: "Fall in price"},
+  {q: "The main reason for the location of a cement factory near a limestone quarry is ___.", options: ["Availability of labor", "Proximity to raw materials", "Market size", "Good climate"], answer: "Proximity to raw materials"},
+  {q: "Which of the following is a disadvantage of the localization of industries?", options: ["Development of skilled labor", "Creation of employment", "Congestion and pressure on social amenities", "Research and innovation"], answer: "Congestion and pressure on social amenities"},
+  {q: "A firm achieves a state of equilibrium in the short run when ___.", options: ["Total revenue equals total cost", "Marginal cost equals marginal revenue", "Average cost is at its minimum", "Price is equal to average cost"], answer: "Marginal cost equals marginal revenue"},
+  {q: "Which of the following is a feature of an oligopoly?", options: ["Single seller", "Many buyers and sellers", "Few dominant firms", "Free entry and exit"], answer: "Few dominant firms"},
+  {q: "The total value of all goods and services produced within a country's borders is the ___.", options: ["Gross National Product", "Gross Domestic Product", "Net National Product", "Personal Income"], answer: "Gross Domestic Product"},
+  {q: "In the calculation of National Income, the value of the 'output method' avoids double counting by using ___.", options: ["Total sales", "Value added at each stage", "Total expenditure", "Personal income"], answer: "Value added at each stage"},
+  {q: "The relationship between the value of money and the price level is ___.", options: ["Direct", "Inverse", "Constant", "Unrelated"], answer: "Inverse"},
+  {q: "Money is used as a 'unit of account' when it is used to ___.", options: ["Buy goods", "Measure the value of goods and services", "Store wealth", "Settle future debts"], answer: "Measure the value of goods and services"},
+  {q: "The demand for money for unexpected expenses is known as ___.", options: ["Transactionary motive", "Precautionary motive", "Speculative motive", "Investment motive"], answer: "Precautionary motive"},
+  {q: "The central bank uses 'Open Market Operations' to control the money supply by ___.", options: ["Lending to firms", "Buying or selling government securities", "Printing more notes", "Fixing interest rates"], answer: "Buying or selling government securities"},
+  {q: "Which of the following is an example of a specialized bank?", options: ["Commercial bank", "Central bank", "Merchant bank", "Agricultural bank"], answer: "Agricultural bank"},
+  {q: "Tax incidence refers to ___.", options: ["The process of collecting tax", "The person who bears the final burden of a tax", "The rate of taxation", "The types of taxes"], answer: "The person who bears the final burden of a tax"},
+  {q: "If the demand for a product is perfectly inelastic, the burden of an indirect tax falls ___.", options: ["Entirely on the consumer", "Entirely on the producer", "Equally on both", "Only on the government"], answer: "Entirely on the consumer"},
+  {q: "The most important revenue source for most West African governments is ___.", options: ["Direct tax", "Indirect tax", "Grants", "Fines"], answer: "Indirect tax"},
+  {q: "A budget is said to be balanced when planned expenditure is ___.", options: ["Greater than revenue", "Less than revenue", "Equal to revenue", "Zero"], answer: "Equal to revenue"},
+  {q: "One of the major causes of a high birth rate in developing countries is ___.", options: ["High education levels", "Early marriage", "Industrialization", "Urbanization"], answer: "Early marriage"},
+  {q: "The Malthusian theory suggests that food supply increases in ___.", options: ["Geometric progression", "Arithmetic progression", "Constant rate", "Variable rate"], answer: "Arithmetic progression"},
+  {q: "Labor productivity is defined as total output ___ total number of workers.", options: ["plus", "minus", "multiplied by", "divided by"], answer: "divided by"},
+  {q: "The difference between the birth rate and the death rate is the ___.", options: ["Dependency ratio", "Natural growth rate", "Migration rate", "Optimum population"], answer: "Natural growth rate"},
+  {q: "A country experiencing persistent trade deficits may decide to ___.", options: ["Increase imports", "Restrict exports", "Devaluate its currency", "Reduce tariffs"], answer: "Devaluate its currency"},
+  {q: "Foreign exchange refers to the ___.", options: ["Exchange of goods for goods", "Total value of exports", "Currencies of other countries", "Trade between two cities"], answer: "Currencies of other countries"},
+  {q: "The main objective of the African Development Bank is to ___.", options: ["Provide political stability", "Finance economic development in Africa", "Mint money for African countries", "Control migration"], answer: "Finance economic development in Africa"},
+  {q: "A free trade area is a region where ___.", options: ["Member countries use one currency", "There are no tariffs between member countries", "There is a common external tariff", "Labor moves freely"], answer: "There are no tariffs between member countries"},
+  {q: "The term 'terms of trade' is calculated as index of export prices ___ index of import prices multiplied by 100.", options: ["plus", "minus", "divided by", "times"], answer: "divided by"},
+  {q: "Protectionism is a policy intended to ___.", options: ["Encourage imports", "Protect domestic industries from foreign competition", "Increase global trade", "Devaluate currency"], answer: "Protect domestic industries from foreign competition"},
+  {q: "Which of the following is a tool of economic planning?", options: ["Inflation", "National budget", "Trade deficit", "Consumer surplus"], answer: "National budget"},
+  {q: "The primary sector of the economy is concerned with ___.", options: ["Manufacturing", "Banking", "Extraction of natural resources", "Construction"], answer: "Extraction of natural resources"},
+  {q: "Economic development is often associated with a shift from ___.", options: ["Industry to agriculture", "Agriculture to industry", "Trade to mining", "Public to private"], answer: "Agriculture to industry"},
+  {q: "The most frequent value in a set of data is the ___.", options: ["Mean", "Median", "Mode", "Range"], answer: "Mode"},
+  {q: "In a pie chart, a category representing 25 percent of the total will have an angle of ___.", options: ["25 degrees", "90 degrees", "180 degrees", "360 degrees"], answer: "90 degrees"},
+  {q: "The sum of the values divided by the number of values is the ___.", options: ["Arithmetic mean", "Geometric mean", "Standard deviation", "Variance"], answer: "Arithmetic mean"},
+  {q: "An increase in the price of a factor of production will lead to a ___.", options: ["Shift in demand curve", "Rise in production cost", "Fall in marginal cost", "Rise in profit"], answer: "Rise in production cost"},
+  {q: "A consumer's budget line shifts to the right when ___.", options: ["Income increases", "Price increases", "Income decreases", "Utility falls"], answer: "Income increases"},
+  {q: "The concept of 'invisible hand' was introduced by ___.", options: ["John Keynes", "Adam Smith", "Alfred Marshall", "Lionel Robbins"], answer: "Adam Smith"},
+  {q: "Which of the following is an example of joint supply?", options: ["Bread and butter", "Beef and hides", "Tea and coffee", "Car and petrol"], answer: "Beef and hides"},
+  {q: "Price discrimination is most common under ___.", options: ["Perfect competition", "Monopoly", "Monopsony", "Oligopoly"], answer: "Monopoly"},
+  {q: "The income of a firm from the sale of an additional unit of output is the ___.", options: ["Total revenue", "Average revenue", "Marginal revenue", "Fixed revenue"], answer: "Marginal revenue"},
+  {q: "Average cost is calculated as total cost ___ total output.", options: ["plus", "multiplied by", "divided by", "minus"], answer: "divided by"},
+  {q: "A market condition where there is only one buyer is a ___.", options: ["Monopoly", "Monopsony", "Duopoly", "Oligopoly"], answer: "Monopsony"},
+  {q: "One of the canons of taxation according to Adam Smith is ___.", options: ["Profitability", "Complexity", "Economy", "Elasticity"], answer: "Economy"},
+  {q: "The value of a worker's contribution to the production process is the ___.", options: ["Marginal physical product", "Marginal revenue product", "Total product", "Average product"], answer: "Marginal revenue product"},
+  {q: "A deficit in the balance of payments can be corrected by ___.", options: ["Increasing imports", "Reducing exports", "Export promotion", "Increasing government spending"], answer: "Export promotion"},
+  {q: "The most important objective of the World Bank is to provide ___.", options: ["Short term loans for trade", "Long term loans for reconstruction and development", "Military aid", "Food aid"], answer: "Long term loans for reconstruction and development"}
+];
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>
