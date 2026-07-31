@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Physics CBT 2025</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "Which of the following is a fundamental quantity?", options: ["Velocity", "Force", "Luminous intensity", "Acceleration"], answer: "Luminous intensity"},
+  {q: "A car accelerates uniformly from rest at 4 m/s². Calculate its velocity after 10 seconds.", options: ["20 m/s", "40 m/s", "80 m/s", "100 m/s"], answer: "40 m/s"},
+  {q: "The rate of change of momentum is proportional to the applied ___.", options: ["Velocity", "Inertia", "Force", "Displacement"], answer: "Force"},
+  {q: "Calculate the work done when a force of 20N pushes an object through a distance of 5m.", options: ["4J", "15J", "25J", "100J"], answer: "100J"},
+  {q: "The ratio of the output power to the input power of a machine is its ___.", options: ["Mechanical Advantage", "Velocity Ratio", "Efficiency", "Power factor"], answer: "Efficiency"},
+  {q: "An object of mass 2kg is moving with a velocity of 5 m/s. Calculate its kinetic energy.", options: ["5J", "10J", "25J", "50J"], answer: "25J"},
+  {q: "A stone is dropped from a height of 20m. Calculate the time it takes to reach the ground. (g = 10 m/s²)", options: ["1s", "2s", "3s", "4s"], answer: "2s"},
+  {q: "The temperature at which the water vapor in the air is just sufficient to saturate it is the ___.", options: ["Boiling point", "Ice point", "Dew point", "Critical point"], answer: "Dew point"},
+  {q: "The heat required to change the state of a substance without a change in temperature is ___.", options: ["Specific heat capacity", "Heat capacity", "Latent heat", "Thermal conductivity"], answer: "Latent heat"},
+  {q: "Calculate the pressure exerted by a force of 500N on an area of 2 m².", options: ["250 Pa", "500 Pa", "1000 Pa", "2000 Pa"], answer: "250 Pa"},
+  {q: "According to Boyle's Law, the volume of a gas is inversely proportional to its ___ at constant temperature.", options: ["Mass", "Pressure", "Density", "Velocity"], answer: "Pressure"},
+  {q: "The escape velocity of a rocket from the Earth's surface is approximately ___.", options: ["7.2 km/s", "11.2 km/s", "3.0 × 10⁸ m/s", "9.8 m/s"], answer: "11.2 km/s"},
+  {q: "Which of the following is a vector quantity?", options: ["Energy", "Weight", "Mass", "Speed"], answer: "Weight"},
+  {q: "The property of a material to return to its original shape after being stretched is ___.", options: ["Plasticity", "Elasticity", "Brittleness", "Ductility"], answer: "Elasticity"},
+  {q: "Calculate the period of a wave whose frequency is 50 Hz.", options: ["0.02s", "0.2s", "2s", "5s"], answer: "0.02s"},
+  {q: "The speed of sound is fastest in ___.", options: ["Air", "Water", "Steel", "Vacuum"], answer: "Steel"},
+  {q: "The point on the principal axis of a lens where all parallel rays converge is the ___.", options: ["Center of curvature", "Principal focus", "Optical center", "Pole"], answer: "Principal focus"},
+  {q: "A magnifying glass is an example of a ___.", options: ["Concave lens", "Convex lens", "Plane mirror", "Concave mirror"], answer: "Convex lens"},
+  {q: "The distance between two successive crests of a transverse wave is the ___.", options: ["Amplitude", "Wavelength", "Frequency", "Period"], answer: "Wavelength"},
+  {q: "The phenomenon where a wave changes direction as it passes from one medium to another is ___.", options: ["Reflection", "Refraction", "Diffraction", "Interference"], answer: "Refraction"},
+  {q: "An object is placed 10cm in front of a plane mirror. The distance between the object and its image is ___.", options: ["5cm", "10cm", "20cm", "30cm"], answer: "20cm"},
+  {q: "The unit of electrical resistance is ___.", options: ["Volt", "Ampere", "Ohm (Ω)", "Coulomb"], answer: "Ohm (Ω)"},
+  {q: "Three 2Ω resistors are connected in series. The total resistance is ___.", options: ["0.67Ω", "2Ω", "4Ω", "6Ω"], answer: "6Ω"},
+  {q: "Calculate the power of an electrical appliance that draws 2A from a 240V supply.", options: ["120W", "240W", "480W", "960W"], answer: "480W"},
+  {q: "The device used to store electrical charge is a ___.", options: ["Resistor", "Inductor", "Capacitor", "Transistor"], answer: "Capacitor"},
+  {q: "Magnetic flux density is measured in ___.", options: ["Weber", "Tesla", "Henry", "Farad"], answer: "Tesla"},
+  {q: "The direction of an induced current is such as to oppose the change causing it. This is ___ Law.", options: ["Faraday's", "Lenz's", "Ohm's", "Ampere's"], answer: "Lenz's"},
+  {q: "A step-up transformer increases ___.", options: ["Power", "Current", "Voltage", "Frequency"], answer: "Voltage"},
+  {q: "The process by which electrons are emitted from a heated metal surface is ___.", options: ["Photoelectric effect", "Thermionic emission", "Field emission", "Secondary emission"], answer: "Thermionic emission"},
+  {q: "Which of the following radiations has the highest penetrating power?", options: ["Alpha particles", "Beta particles", "Gamma rays", "X-rays"], answer: "Gamma rays"},
+  {q: "The half-life of a radioactive substance is 10 days. What fraction remains after 30 days?", options: ["1/2", "1/4", "1/8", "1/16"], answer: "1/8"},
+  {q: "In Einstein's equation E = mc², 'c' represents the ___.", options: ["Charge of an electron", "Speed of light", "Capacitance", "Specific heat capacity"], answer: "Speed of light"},
+  {q: "The colors seen on a thin film of oil on water is due to ___.", options: ["Dispersion", "Interference", "Diffraction", "Polarization"], answer: "Interference"},
+  {q: "Calculate the force on a charge of 2C in an electric field of intensity 100 N/C.", options: ["50N", "100N", "150N", "200N"], answer: "200N"},
+  {q: "The energy level of an atom when its electrons are in their lowest possible states is the ___.", options: ["Excited state", "Ground state", "Ionized state", "Transition state"], answer: "Ground state"},
+  {q: "Which of the following is used to control the rate of fission in a nuclear reactor?", options: ["Coolant", "Moderator", "Control rods", "Fuel rods"], answer: "Control rods"},
+  {q: "The refractive index of glass is 1.5. Calculate the speed of light in glass. (c = 3 × 10⁸ m/s)", options: ["1.5 × 10⁸ m/s", "2.0 × 10⁸ m/s", "3.0 × 10⁸ m/s", "4.5 × 10⁸ m/s"], answer: "2.0 × 10⁸ m/s"},
+  {q: "An object weighs 60N on Earth. What is its weight on the Moon? (g_moon = 1/6 g_earth)", options: ["6N", "10N", "30N", "60N"], answer: "10N"},
+  {q: "The process of a gas changing to a liquid is ___.", options: ["Evaporation", "Condensation", "Sublimation", "Fusion"], answer: "Condensation"},
+  {q: "The slope of a velocity-time graph represents ___.", options: ["Distance", "Displacement", "Speed", "Acceleration"], answer: "Acceleration"},
+  {q: "Calculate the work done in stretching a spring of force constant 500 N/m by 0.1m.", options: ["2.5J", "5J", "25J", "50J"], answer: "2.5J"},
+  {q: "The boiling point of water in Kelvin is ___.", options: ["0K", "100K", "273K", "373K"], answer: "373K"},
+  {q: "A simple pendulum has a length of 1m. Calculate its period. (g = 10 m/s², π = 3.14)", options: ["1s", "2s", "3.14s", "6.28s"], answer: "2s"},
+  {q: "The angle between the magnetic meridian and the geographic meridian is the ___.", options: ["Angle of dip", "Angle of declination", "Critical angle", "Glancing angle"], answer: "Angle of declination"},
+  {q: "Which instrument is used to measure the specific gravity of a liquid?", options: ["Hygrometer", "Hydrometer", "Barometer", "Manometer"], answer: "Hydrometer"},
+  {q: "In a p-type semiconductor, the majority charge carriers are ___.", options: ["Electrons", "Holes", "Protons", "Neutrons"], answer: "Holes"},
+  {q: "The resistance of a wire is 10Ω. If its length is doubled and its area is halved, the new resistance is ___.", options: ["10Ω", "20Ω", "40Ω", "80Ω"], answer: "40Ω"},
+  {q: "The human eye forms an image on the ___.", options: ["Iris", "Pupil", "Lens", "Retina"], answer: "Retina"},
+  {q: "Which of the following mirrors always forms a virtual, erect, and diminished image?", options: ["Plane mirror", "Concave mirror", "Convex mirror", "Parabolic mirror"], answer: "Convex mirror"},
+  {q: "Calculate the wavelength of a photon of energy 3.3 × 10⁻¹⁹ J. (h = 6.6 × 10⁻³⁴ Js, c = 3 × 10⁸ m/s)", options: ["300 nm", "600 nm", "900 nm", "1200 nm"], answer: "600 nm"}
+];
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>

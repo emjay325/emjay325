@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Physics CBT 2023</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+   .option-btn:hover { background-color: #dbeafe; }
+   .option-btn.selected { background-color: #2563eb; color: white; }
+   .flagged { background-color: #fbbf24 !important; color: black !important; }
+   .attempted { background-color: #10b981 !important; color: white !important; }
+   .current { border: 3px solid #2563eb !important; }
+   #question-grid button { 
+     width: 35px; height: 35px; 
+     background: #e5e7eb; 
+     border-radius: 6px; 
+     font-weight: bold;
+     font-size: 12px;
+     transition: all 0.2s;
+   }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+  <div id="cbt-container" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    
+    <!-- HEADER -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h1 class="text-2xl font-bold">Sample WAEC-style CBT</h1>
+      <div id="timer" class="text-xl font-bold text-red-600">Time: 90:00</div>
+    </div>
+
+    <!-- Question Grid + Review Button -->
+    <div class="bg-gray-50 p-4 rounded-xl mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm font-bold text-gray-700">Question Navigation</span>
+        <button onclick="flagQuestion()" class="px-4 py-1 bg-yellow-400 hover:bg-yellow-500 rounded-lg font-semibold text-sm flex items-center gap-1">
+          Review Later 🔍
+        </button>
+      </div>
+      <div id="question-grid" class="grid grid-cols-10 gap-2">
+        <!-- JS will populate buttons here -->
+      </div>
+    </div>
+
+    <!-- QUESTION AREA -->
+    <div id="question-area">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm text-gray-600">Question <span id="qNum">1</span> of <span id="qTotal">10</span></p>
+      </div>
+      <h2 id="questionText" class="text-xl font-semibold mb-6 min-h-[60px]"></h2>
+      
+      <div id="options" class="grid gap-3 mb-8"></div>
+
+      <div class="flex justify-between border-t pt-6">
+        <button onclick="prevQuestion()" id="prevBtn"
+          class="px-6 py-2 bg-gray-300 hover:bg-gray-400 rounded-lg font-semibold disabled:opacity-50">
+          Previous
+        </button>
+        
+        <button onclick="nextQuestion()" id="nextBtn"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold">
+          Next
+        </button>
+
+        <button onclick="confirmSubmit()" id="submitBtn"
+          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold hidden">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT AREA -->
+    <div id="result-area" class="hidden text-center py-10">
+      <h2 class="text-3xl font-bold mb-4">Test Submitted Successfully 🎉</h2>
+      <div class="bg-blue-50 p-6 rounded-2xl inline-block mb-6">
+        <p class="text-xl mb-2">Your Score: <span id="score" class="font-bold text-blue-600"></span> / <span id="total"></span></p>
+        <p class="text-lg">Percentage: <span id="percent" class="font-bold text-blue-600"></span>%</p>
+      </div>
+      <br>
+      <button onclick="location.reload()" class="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold">Restart Practice</button>
+    </div>
+    
+  </div>
+
+<script>
+// 1. DATA ARRAY
+const questions = [
+  {q: "The dimension of Power is given by ___.", options: ["ML²T⁻²", "ML²T⁻³", "MLT⁻²", "ML⁻¹T⁻²"], answer: "ML²T⁻³"},
+  {q: "A projectile is launched with a velocity of 50 m/s at an angle of 30° to the horizontal. Calculate the time of flight. (g = 10 m/s²)", options: ["2.5s", "5.0s", "7.5s", "10.0s"], answer: "5.0s"},
+  {q: "The property of a liquid which causes it to resist the relative motion of its layers is ___.", options: ["Surface tension", "Viscosity", "Capillarity", "Adhesion"], answer: "Viscosity"},
+  {q: "Calculate the Young's Modulus of a wire of length 2m and area 10⁻⁶ m² which stretches by 2mm under a load of 100N.", options: ["1.0 × 10¹¹ N/m²", "2.0 × 10¹¹ N/m²", "1.0 × 10¹⁰ N/m²", "5.0 × 10⁹ N/m²"], answer: "1.0 × 10¹¹ N/m²"},
+  {q: "A block and tackle system has 6 pulleys. If its efficiency is 70%, calculate the mechanical advantage.", options: ["3.5", "4.2", "4.8", "6.0"], answer: "4.2"},
+  {q: "The pressure of a gas is 100 Pa at 27°C. Calculate the pressure at 127°C if the volume remains constant.", options: ["133.3 Pa", "150.0 Pa", "200.0 Pa", "470.0 Pa"], answer: "133.3 Pa"},
+  {q: "Which of the following is the correct relationship between linear expansivity (α) and cubic expansivity (γ)?", options: ["γ = α", "γ = 2α", "γ = 3α", "α = 3γ"], answer: "γ = 3α"},
+  {q: "The heat required to change 1kg of a liquid to gas at its boiling point is the ___.", options: ["Specific heat capacity", "Latent heat of fusion", "Latent heat of vaporization", "Thermal capacity"], answer: "Latent heat of vaporization"},
+  {q: "A wave equation is given by y = 0.5 sin(0.4πx - 10πt). Calculate the velocity of the wave.", options: ["4 m/s", "25 m/s", "10 m/s", "40 m/s"], answer: "25 m/s"},
+  {q: "The phenomenon where two waves of the same frequency and amplitude overlap to produce a resultant wave is ___.", options: ["Diffraction", "Interference", "Polarization", "Refraction"], answer: "Interference"},
+  {q: "Calculate the critical angle for a glass-air interface if the refractive index of glass is 1.5.", options: ["30.0°", "41.8°", "48.6°", "60.0°"], answer: "41.8°"},
+  {q: "An astronomical telescope in normal adjustment has an objective of focal length 100cm and an eyepiece of 5cm. Calculate the magnification.", options: ["5", "20", "95", "105"], answer: "20"},
+  {q: "Which of the following colors of light has the longest wavelength?", options: ["Blue", "Green", "Yellow", "Red"], answer: "Red"},
+  {q: "The unit of electric potential is the Volt, which is equivalent to ___.", options: ["Joule/Coulomb", "Joule/Second", "Newton/Coulomb", "Ampere/Ohm"], answer: "Joule/Coulomb"},
+  {q: "Calculate the energy stored in a 10μF capacitor charged to a potential difference of 100V.", options: ["0.05 J", "0.1 J", "0.5 J", "1.0 J"], answer: "0.05 J"},
+  {q: "A cell of e.m.f 2.0V and internal resistance 0.5Ω is connected to a 3.5Ω resistor. Calculate the current.", options: ["0.4A", "0.5A", "1.0A", "2.0A"], answer: "0.5A"},
+  {q: "The process of adding impurities to a pure semiconductor to increase its conductivity is ___.", options: ["Ionization", "Doping", "Rectification", "Valency"], answer: "Doping"},
+  {q: "In a R-L-C series circuit at resonance, the impedance is equal to the ___.", options: ["Inductive reactance", "Capacitive reactance", "Resistance", "Phase angle"], answer: "Resistance"},
+  {q: "Calculate the force on a wire of length 0.5m carrying 2A at right angles to a magnetic field of 0.4T.", options: ["0.1N", "0.2N", "0.4N", "0.8N"], answer: "0.4N"},
+  {q: "The part of a DC motor that reverses the direction of current every half-turn is the ___.", options: ["Brushes", "Armature", "Commutator", "Field magnet"], answer: "Commutator"},
+  {q: "According to Einstein's photoelectric equation, the maximum kinetic energy of emitted electrons depends on ___.", options: ["Intensity of light", "Frequency of light", "Surface area", "Time of exposure"], answer: "Frequency of light"},
+  {q: "A radioactive element has a half-life of 2 hours. If the initial mass is 100g, what mass remains after 6 hours?", options: ["50g", "25g", "12.5g", "6.25g"], answer: "12.5g"},
+  {q: "Which of the following is used as a moderator in a nuclear reactor?", options: ["Boron", "Graphite", "Uranium", "Cadmium"], answer: "Graphite"},
+  {q: "The force of attraction between two masses m₁ and m₂ separated by a distance r is ___.", options: ["G m₁m₂ / r", "G m₁m₂ / r²", "m₁m₂ / G r²", "G r² / m₁m₂"], answer: "G m₁m₂ / r²"},
+  {q: "Calculate the work done in moving a 5kg object from the Earth's surface to a height equal to the Earth's radius (R = 6.4 × 10⁶ m, g = 10 m/s²).", options: ["1.6 × 10⁸ J", "3.2 × 10⁸ J", "1.6 × 10⁷ J", "6.4 × 10⁷ J"], answer: "1.6 × 10⁸ J"},
+  {q: "The temperature at which the Celsius and Fahrenheit scales have the same numerical value is ___.", options: ["0°", "32°", "-40°", "100°"], answer: "-40°"},
+  {q: "Which instrument is used to compare the e.m.f of two cells?", options: ["Voltmeter", "Potentiometer", "Ammeter", "Galvanometer"], answer: "Potentiometer"},
+  {q: "A body is in neutral equilibrium when its center of gravity ___.", options: ["Is raised", "Is lowered", "Remains at the same height", "Is outside the body"], answer: "Remains at the same height"},
+  {q: "Calculate the momentum of a 0.5kg ball moving at 20 m/s.", options: ["5 kg·m/s", "10 kg·m/s", "20 kg·m/s", "40 kg·m/s"], answer: "10 kg·m/s"},
+  {q: "The speed of light in a medium is 2.0 × 10⁸ m/s. Calculate the refractive index. (c = 3.0 × 10⁸ m/s)", options: ["0.67", "1.25", "1.50", "2.00"], answer: "1.50"},
+  {q: "Which of the following waves cannot be polarized?", options: ["Radio waves", "Light waves", "Sound waves", "X-rays"], answer: "Sound waves"},
+  {q: "A 60W bulb is used for 10 hours. Calculate the energy consumed in kilowatt-hours (kWh).", options: ["0.06 kWh", "0.6 kWh", "6.0 kWh", "60 kWh"], answer: "0.6 kWh"},
+  {q: "The change in resistance of a wire when its temperature increases is used in ___.", options: ["Thermocouple", "Resistance thermometer", "Optical pyrometer", "Constant volume thermometer"], answer: "Resistance thermometer"},
+  {q: "Calculate the centripetal acceleration of a car moving at 10 m/s around a curve of radius 50m.", options: ["0.2 m/s²", "2.0 m/s²", "5.0 m/s²", "500 m/s²"], answer: "2.0 m/s²"},
+  {q: "Which of the following is a derived unit?", options: ["Kilogram", "Second", "Newton", "Kelvin"], answer: "Newton"},
+  {q: "An object is placed between the pole and the focus of a concave mirror. The image formed is ___.", options: ["Real, inverted, diminished", "Virtual, erect, magnified", "Real, inverted, magnified", "Virtual, erect, diminished"], answer: "Virtual, erect, magnified"},
+  {q: "The escape velocity from the Earth's surface depends on ___.", options: ["Mass of the object", "Radius of the Earth", "Mass of the Sun", "Atmospheric pressure"], answer: "Radius of the Earth"},
+  {q: "Calculate the frequency of a photon with energy 6.6 × 10⁻¹⁹ J. (h = 6.6 × 10⁻³⁴ Js)", options: ["1.0 × 10¹⁴ Hz", "1.0 × 10¹⁵ Hz", "1.0 × 10¹⁶ Hz", "6.6 × 10¹⁴ Hz"], answer: "1.0 × 10¹⁵ Hz"},
+  {q: "The area under a force-distance graph represents ___.", options: ["Power", "Momentum", "Work done", "Acceleration"], answer: "Work done"},
+  {q: "Which of the following is a characteristic of a stationary wave?", options: ["Energy is transferred", "All particles vibrate with same amplitude", "Nodes and antinodes are formed", "The wave moves forward"], answer: "Nodes and antinodes are formed"},
+  {q: "Calculate the upthrust on a body of volume 0.01 m³ fully immersed in water. (Density of water = 1000 kg/m³)", options: ["10N", "100N", "1000N", "1N"], answer: "100N"},
+  {q: "The clinical thermometer has a constriction to ___.", options: ["Prevent the mercury from expanding", "Stop the mercury from falling back", "Make the scale readable", "Increase sensitivity"], answer: "Stop the mercury from falling back"},
+  {q: "A hydraulic press has piston areas of 0.02 m² and 0.20 m². If a force of 100N is applied to the small piston, calculate the output force.", options: ["10N", "200N", "1000N", "2000N"], answer: "1000N"},
+  {q: "The color of a thin film of soap bubble is caused by ___.", options: ["Dispersion", "Refraction", "Interference", "Diffraction"], answer: "Interference"},
+  {q: "Calculate the effective capacitance of two 6μF capacitors in series.", options: ["3μF", "6μF", "12μF", "36μF"], answer: "3μF"},
+  {q: "The work done per unit charge in moving a charge between two points is ___.", options: ["Electric current", "Potential difference", "Resistance", "Capacitance"], answer: "Potential difference"},
+  {q: "Which of the following is an example of a scalar product of two vectors?", options: ["Force × Time", "Mass × Acceleration", "Force × Displacement", "Mass × Velocity"], answer: "Force × Displacement"},
+  {q: "The process by which an atom in an excited state emits a photon and returns to a lower state is ___.", options: ["Stimulated emission", "Spontaneous emission", "Absorption", "Ionization"], answer: "Spontaneous emission"},
+  {q: "Calculate the angle of dip at the magnetic equator.", options: ["0°", "45°", "90°", "180°"], answer: "0°"},
+  {q: "The particle emitted during the decay of Carbon-14 to Nitrogen-14 is a/an ___.", options: ["Alpha particle", "Beta particle", "Gamma ray", "Neutron"], answer: "Beta particle"}
+];
+
+// 2. STATE VARIABLES
+let currentQ = 0;
+let userAnswers = {};
+let flaggedQs = {};
+let timeLeft = 90 * 60; // 90 minutes in seconds
+let timerInterval;
+
+// 3. INITIALIZATION
+document.getElementById('qTotal').innerText = questions.length;
+loadQuestion();
+startTimer();
+
+// 4. CORE FUNCTIONS
+function loadQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qNum').innerText = currentQ + 1;
+  document.getElementById('questionText').innerText = q.q;
+
+  // Load options
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+  
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.innerText = opt;
+    btn.className = 'option-btn p-4 border-2 rounded-xl text-left font-medium transition-all';
+    
+    // Check if this option was already selected
+    if(userAnswers[currentQ] === opt) {
+        btn.classList.add('selected', 'border-blue-600');
+    } else {
+        btn.classList.add('border-gray-200');
+    }
+    
+    btn.onclick = () => selectAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+
+  // Toggle Visibility of Nav Buttons
+  document.getElementById('prevBtn').disabled = currentQ === 0;
+  
+  if (currentQ === questions.length - 1) {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('submitBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('nextBtn').classList.remove('hidden');
+    document.getElementById('submitBtn').classList.add('hidden');
+  }
+
+  updateQuestionGrid();
+}
+
+function selectAnswer(opt) {
+  userAnswers[currentQ] = opt;
+  loadQuestion(); 
+}
+
+function nextQuestion() {
+  if(currentQ < questions.length - 1) {
+    currentQ++;
+    loadQuestion();
+  }
+}
+
+function prevQuestion() {
+  if(currentQ > 0) {
+    currentQ--;
+    loadQuestion();
+  }
+}
+
+function jumpToQuestion(index) {
+  currentQ = index;
+  loadQuestion();
+}
+
+function flagQuestion() {
+  flaggedQs[currentQ] = !flaggedQs[currentQ];
+  updateQuestionGrid();
+}
+
+function updateQuestionGrid() {
+  const grid = document.getElementById('question-grid');
+  grid.innerHTML = '';
+  
+  questions.forEach((_, i) => {
+    const btn = document.createElement('button');
+    btn.innerText = i + 1;
+    btn.onclick = () => jumpToQuestion(i);
+    
+    // Apply status colors
+    if (i === currentQ) btn.classList.add('current');
+    if (userAnswers[i]) btn.classList.add('attempted');
+    if (flaggedQs[i]) btn.classList.add('flagged');
+    
+    grid.appendChild(btn);
+  });
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    let hours = Math.floor(timeLeft / 3600);
+    let mins = Math.floor((timeLeft % 3600) / 60);
+    let secs = timeLeft % 60;
+    
+    let displayTime = hours > 0 
+        ? `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`
+        : `${mins}:${secs.toString().padStart(2,'0')}`;
+        
+    document.getElementById('timer').innerText = `Time: ${displayTime}`;
+    
+    if(timeLeft <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function confirmSubmit() {
+    if(confirm("Are you sure you want to submit your test?")) {
+        submitTest();
+    }
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  
+  let score = 0;
+  questions.forEach((q, i) => {
+    if(userAnswers[i] === q.answer) {
+        score++;
+    }
+  });
+  
+  let percent = ((score / questions.length) * 100).toFixed(1);
+
+  document.getElementById('question-area').classList.add('hidden');
+  document.getElementById('question-grid').parentElement.classList.add('hidden');
+  document.getElementById('result-area').classList.remove('hidden');
+  
+  document.getElementById('score').innerText = score;
+  document.getElementById('total').innerText = questions.length;
+  document.getElementById('percent').innerText = percent;
+}
+</script>
+</body>
+</html>
